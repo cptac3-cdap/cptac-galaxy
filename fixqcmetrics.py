@@ -104,8 +104,8 @@ else:
 
 print >>sys.stderr
 print >>sys.stderr, "Analytical Samples:"
-for as in sorted(asfreq,key=assortkey.get):
-    print >>sys.stderr, as,asfreq[as]
+for asamp in sorted(asfreq,key=assortkey.get):
+    print >>sys.stderr, asamp,asfreq[asamp]
 print >>sys.stderr
 
 print >>sys.stderr, "Fractions:"
