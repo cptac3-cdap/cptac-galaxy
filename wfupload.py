@@ -52,10 +52,31 @@ import bioblend
 gi = GalaxyInstance(url=url,key=apikey)
 gi.verify=False
 
+wfname2id = defaultdict(set)
+for wf in gi.workflows.get_workflows():
+    wfname = wf['name']
+    if ' (imported from ' in wfname:
+	wfname = wfname.split(' (imported from ',1)[0]
+        wfname2id[wfname].add(wf['id'])
+    else:
+        wfname2id[wfname].add(wf['id'])
+
 for wffile in sorted(glob.glob(os.path.join(opts.directory,'*.ga'))):
-  try:
-      wfi = gi.workflows.import_workflow_from_local_path(wffile)
-      print "Imported workflow: %s"%(wfi['name'],)
-  except:
-      print "Import workflow failed: %s"%(wffile,)
-      traceback.print_exc()
+    wf = json.loads(open(wffile).read())
+    wfname = wf['name']
+    if ' (imported from ' in wfname:
+	wfname = wfname.split(' (imported from ',1)[0]
+    if wfname in wfname2id:
+	for wfid in wfname2id[wfname]:
+            try:
+	        gi.workflows.delete_workflow(wfid)
+                print "Delete workflow: %s"%(wfname,)
+            except:
+                print "Delete workflow failed: %s"%(wf['name'],)
+                traceback.print_exc()
+    try:
+        wfi = gi.workflows.import_workflow_from_local_path(wffile)
+        print "Imported workflow: %s"%(wfi['name'],)
+    except:
+        print "Import workflow failed: %s"%(wffile,)
+        traceback.print_exc()

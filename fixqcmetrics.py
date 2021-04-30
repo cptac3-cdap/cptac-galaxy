@@ -5,7 +5,7 @@ from optparse import OptionParser
 from collections import defaultdict
 
 p = OptionParser()
-p.add_option('--analsamp',type='string',dest="asregex",default=None,
+p.add_option('--analsamp',type='string',dest="asregex",default=r'^(.*)_',
              help="Analytical sample regular expression. Required.")
 p.add_option('--analsampgrp',type='int',dest="asregexgrp",default=1,
              help="Analytical sample regular expression group. Default: 1.")
@@ -15,7 +15,7 @@ p.add_option('--analsampsortgrp',type='string',dest="assortregexgrp",default=1,
              help="Analytical sample sorting value regular expression group. Default: 1.")
 p.add_option('--analsampexpr',type='string',dest='asexpr',default=None,
 	     help='Python expression to evaluate on extracted analytical sample')
-p.add_option('--fraction',type='string',dest="fnregex",default=None,
+p.add_option('--fraction',type='string',dest="fnregex",default=r'.*_[fF](A|\d+)$',
              help="Fraction number regular expression. Required.")
 p.add_option('--fractiongrp',type='int',dest="fnregexgrp",default=1,
              help="Fraction number regular expression group. Default: 1.")

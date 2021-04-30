@@ -246,6 +246,66 @@ class AWSResources(object):
 	return self.master_exists() or self.worker_exists() or self.winpulsar_exists() or \
 	       self.stack_exists() or self.volume_exists() or self.bucket_exists()
 
+    def delete_resources(self):
+	print "Checking for master..."; sys.stdout.flush()
+	if self.master_exists():
+	    print "Terminating master..."; sys.stdout.flush()
+	    self.ec2conn.terminate_instances(instance_ids=[self.master])
+	print "Checking for workers..."; sys.stdout.flush()
+        instances = []
+	for iid in self.workers:
+	    if self.instance_exists(iid):
+		instances.append(iid)
+	if len(instances) > 0:    
+	    print "Terminating workers..."; sys.stdout.flush()
+	    self.ec2conn.terminate_instances(instance_ids=instances)
+	print "Checking for bucket..."; sys.stdout.flush()
+	if self.bucket_exists():
+	    print "Deleting bucket..."; sys.stdout.flush()
+	    bucket = self.s3conn.lookup(self.bucket)
+	    bucket.delete_keys(list(map(lambda it: it.key,bucket.list())),quiet=True)
+	    self.s3conn.delete_bucket(self.bucket)
+	print "Checking for stacks..."; sys.stdout.flush()
+	if self.stack_exists():
+	    print "Deleting stacks..."; sys.stdout.flush()
+	    for sid in self.cfstacks:
+		self.cfconn.delete_stack(sid)
+	print "Checking for master..."; sys.stdout.flush()
+	if self.master_exists():
+	    print "Waiting for master to terminate..."; sys.stdout.flush()
+	    counter = 0	
+	    while self.master_exists() and counter < 6:
+	        time.sleep(10)
+		counter += 1
+	print "Checking for volume..."; sys.stdout.flush()
+	if self.volume_exists():
+            print "Deleting volume..."; sys.stdout.flush()
+	    self.ec2conn.delete_volume(volume_id=self.volume)
+	print "Checking for stacks..."; sys.stdout.flush()
+	if self.stack_exists():
+	    print "Waiting for stacks to be deleted..."; sys.stdout.flush()
+	    counter = 0
+            while self.stack_exists() and counter < 6:
+	        time.sleep(10)
+                counter += 1
+	print "Checking for winpulsar instances..."; sys.stdout.flush()
+        instances = []
+	for iid in self.winpulsar:
+            if self.instance_exists(iid):
+                instances.append(iid)
+	if len(instances) > 0:
+	    print "Terminating winpulsar instances..."; sys.stdout.flush()
+	    self.ec2conn.terminate_instances(instance_ids=instances)
+	print "Checking for any remaining resources..."; sys.stdout.flush()
+	if self.any_resources():
+	    print "Waiting for resources to be deleted..."; sys.stdout.flush()
+	    counter = 0
+	    while self.any_resources() and counter < 6:
+		time.sleep(10)
+		counter += 1
+	    print "Checking for any remaining resources..."; sys.stdout.flush()
+	return (not self.any_resources())
+
     def __str__(self):
 	s = ""
 	if self.master_exists() or self.worker_exists() or self.winpulsar_exists():
@@ -342,6 +402,21 @@ if __name__ == '__main__':
 	monitor = int(sys.argv[2])
 	sys.argv.pop(1)
 	sys.argv.pop(1)
+
+    if len(sys.argv) == 3 and sys.argv[2] == "--delete":
+	aws.set_cluster_name(sys.argv[1])
+	print "Cluster:",sys.argv[1]
+	sys.stdout.flush()
+        print aws
+	sys.stdout.flush()
+	print "Deleting..."
+	sys.stdout.flush()
+	aws.delete_resources()
+	print "Done."
+	print "Cluster:",sys.argv[1]
+	sys.stdout.flush()
+	print aws
+	sys.stdout.flush()
 
     cluster_name = None
     if len(sys.argv) > 1:

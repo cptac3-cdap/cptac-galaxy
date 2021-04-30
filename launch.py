@@ -8,7 +8,7 @@ requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
 requests.packages.urllib3.disable_warnings(SNIMissingWarning)
 
 import time
-import sys, os, os.path
+import sys, os, os.path, re
 import getpass
 import datetime
 import hashlib
@@ -16,6 +16,7 @@ import glob
 from lockfile import FileLock
 from collections import defaultdict 
 import ConfigParser
+import traceback
 
 scriptdir = os.path.split(os.path.abspath(sys.argv[0]))[0]
 scriptextn = ''
@@ -46,6 +47,10 @@ parser.add_option("--winpulsar",dest="winpulsar",type="int",default=1,
                   help="Number of Windows Pulsar nodes to start. Default: 1")
 parser.add_option("--workers",dest="workers",type="int",default=2,
                   help="Max. worker nodes for autoscale. Default: 2")
+parser.add_option("--master",dest="master",type="choice",
+                  choices=["True","False","Auto"],
+                  default="Auto",
+                  help="Whether master should run jobs. One of True, False, Auto. Default: Auto.")
 
 for k in sorted(general):
     if k in ('aws_instance_type','aws_storage_size','aws_ebs_optimized'):
@@ -73,6 +78,9 @@ if len(args) < 1:
     sys.exit(1);
 
 cluster_name = args[0]
+if not re.search(r'^[-A-Za-z0-9]+$',cluster_name):
+    print >>sys.stderr, "Cluster name %s has characters other than A-Z, a-z, 0-9, and \"-\"."%(cluster_name,)
+    sys.exit(1)
 
 if cm.getcluster(cluster_name):
     print >>sys.stderr, "Cluster name %s already used in this directory"%(cluster_name,)
@@ -105,7 +113,7 @@ instance_type = general['aws_instance_type']
 extra = dict(
 	use_ssl=True,
 	master_prestart_commands=[
-		"wget -O - -q %s | /bin/sh"%(prestarturl,)
+		"wget -O - -q --no-check-certificate %s | /bin/sh"%(prestarturl,)
 	],
 	admin_users=[
 		general['admin_email'],
@@ -207,11 +215,20 @@ while True:
 	break
     time.sleep(delay)
 
+print "Disable ProFTPd for security reasons..."
+params = dict(service_name='ProFTPd',to_be_started='False')
+cmi._make_get_request('manage_service',parameters=params)
+
 print "Galaxy ready: %s"%(url,)
 
 from bioblend.galaxy import GalaxyInstance
+import bioblend
+
 gi = GalaxyInstance(url=url,key=apikey)
 gi.verify=False
+gi.histories.set_max_get_retries(10)
+gi.histories.set_get_retry_delay(20)
+
 workflowsdir = 'workflows'
 if not os.path.isdir(workflowsdir):
     workflowsdir = os.path.join(scriptdir,workflowsdir)
@@ -221,9 +238,11 @@ for wffile in sorted(glob.glob('%s/*.ga'%(workflowsdir,)),reverse=True):
   try:
       wfi = gi.workflows.import_workflow_from_local_path(wffile)
       print "Imported workflow: %s"%(wfi['name'],)
-  except:
+  except (requests.ConnectionError,bioblend.ConnectionError):
       print "Failed to import workflow file: %s"%(wffile,)
       traceback.print_exc()
+      time.sleep(4)
+  time.sleep(1)
 
 start = datetime.datetime.now()
 hi = gi.histories.create_history('Setup').get('id')
@@ -249,12 +268,20 @@ if os.path.exists(seqdbini):
     display=sdb
     filename=seqconf.get(sdb,'Fasta')
     assert(filename)
-    print "%s: %s"%(display, filename)
     seqid = filename.rsplit('.',1)[0]
     species = seqconf.get(sdb,'Species','Unknown')
     source = seqconf.get(sdb,'Source','Unknown')
-    id = gi.tools.upload_file(os.path.join(seqdbdir,filename),hi,file_name=filename)['outputs'][0]['id']; ids['SeqDB'].add(id)
-    id = gi.tools.run_tool(hi,'data_manager_fetch_history_proteome',dict(display=display,source=source,organism=species.lower(),tag=seqid,input_fasta=dict(src='hda',id=id)))['outputs'][0]['id']; ids['SeqDB'].add(id)
+
+    try:
+      id = gi.tools.upload_file(os.path.join(seqdbdir,filename),hi,file_name=filename)['outputs'][0]['id']; ids['SeqDB'].add(id)
+      time.sleep(1)
+      id = gi.tools.run_tool(hi,'data_manager_fetch_history_proteome',dict(display=display,source=source,organism=species.lower(),tag=seqid,input_fasta=dict(src='hda',id=id)))['outputs'][0]['id']; ids['SeqDB'].add(id)
+      time.sleep(1)
+      print "%s: %s"%(display, filename)
+    except (requests.ConnectionError,bioblend.ConnectionError):
+      print "Failed to upload sequence file: %s"%(filename,)
+      traceback.print_exc()
+      time.sleep(3)
 
 # Wait until all uploaded sequence databases are available...
 while True:
@@ -263,9 +290,12 @@ while True:
     print "URL:",url,"SeqDB upload:",
     freq = defaultdict(int)
     for id in ids['SeqDB']:
-        di = gi.histories.show_dataset(hi,id)
-        freq[di['state']] += 1
-    for st in sorted(freq):                                                                                                                                  
+	try:
+          di = gi.histories.show_dataset(hi,id)
+          freq[di['state']] += 1
+	except (requests.ConnectionError,bioblend.ConnectionError):
+	  pass
+    for st in sorted(freq):
         print "%s(%d)"%(st,freq[st]),
     print
     if freq['ok'] == len(ids['SeqDB']):
@@ -280,9 +310,15 @@ for sdb in seqconf.sections():
     assert(filename)
     seqid = filename.rsplit('.',1)[0]
     if seqconf.has_option(sdb,'MSGFPlusIndex') and seqconf.getboolean(sdb,'MSGFPlusIndex'):
-        id = gi.tools.run_tool(hi,'data_manager_msgfplus_indexer1',dict(all_proteome_source=seqid))['outputs'][0]['id']; ids['Index'].add(id)
+	try:
+            id = gi.tools.run_tool(hi,'data_manager_msgfplus_indexer1',dict(all_proteome_source=seqid))['outputs'][0]['id']; ids['Index'].add(id)
+	except (requests.ConnectionError,bioblend.ConnectionError):
+	    pass
     if seqconf.has_option(sdb,'PeptideScanIndex') and seqconf.getboolean(sdb,'PeptideScanIndex'):
-        id = gi.tools.run_tool(hi,'data_manager_compress_seq',dict(all_proteome_source=seqid))['outputs'][0]['id']; ids['Index'].add(id)
+	try:
+            id = gi.tools.run_tool(hi,'data_manager_compress_seq',dict(all_proteome_source=seqid))['outputs'][0]['id']; ids['Index'].add(id)
+	except (requests.ConnectionError,bioblend.ConnectionError):
+	    pass
 
 if general.get('cptac_dcc_user','').strip():
     id = gi.tools.run_tool(hi,'data_manager_cptacdcc_login',dict(user=general['cptac_dcc_user'],password=general['cptac_dcc_password'],transfer="0"))['outputs'][0]['id']
@@ -304,7 +340,7 @@ while True:
     for id in ids['Index']:
         di = gi.histories.show_dataset(hi,id)
         freq[di['state']] += 1
-    for st in sorted(freq):                                                                                                                                  
+    for st in sorted(freq):
         print "%s(%d)"%(st,freq[st]),
     if freq['error'] > 0:
 	raise RuntimeError("Problem with sequence database indexing")
@@ -322,13 +358,19 @@ while True:
     print
     if totalok == sum(map(lambda k: len(ids[k]),('Index','Other'))):
 	if opts.workers > 0:
+            time.sleep(delay)
             print "Setting autoscale, max %d workers"%(opts.workers,)
             cmi.enable_autoscaling(maximum_nodes=opts.workers)
 	    time.sleep(10)
-            # print "Force master as exec host"
-            # cmi._make_get_request("toggle_master_as_exec_host",timeout=15)
-            # if not cmi.is_master_execution_host():
-            #    cmi.set_master_as_execution_host(True)
+	    if opts.master != "Auto":
+                print "Force master as worker setting"
+                cmi._make_get_request("toggle_master_as_exec_host",timeout=15)
+	        if opts.master == "True":
+                    if not cmi.is_master_execution_host():
+                        cmi.set_master_as_execution_host(True)
+		elif opts.master == "False":
+                    if cmi.is_master_execution_host():
+                        cmi.set_master_as_execution_host(False)
 	break
     time.sleep(delay)
 

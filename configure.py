@@ -76,7 +76,10 @@ except:
     sys.exit(1)
 
 if aws_keyname:
-    aws_private_key_path = os.path.join(os.getcwd(),".aws",aws_keyname+".pem")
+    if aws_keypath:
+        aws_private_key_path = aws_keypath
+    else:
+        aws_private_key_path = os.path.join(os.getcwd(),".aws",aws_keyname+".pem")
     awskp = ec2conn.get_key_pair(aws_keyname)
     if not awskp:
         print >>sys.stderr, "Cannot find a AWS EC2 keypair with name %s."%(aws_keyname,)

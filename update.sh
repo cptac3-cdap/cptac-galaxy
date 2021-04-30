@@ -10,8 +10,11 @@ if [ ! -f update.sh ]; then
   exit 1
 fi
 
+if [ -d cptacdcc/rclone ]; then
+  rm -rf cptacdcc/rclone
+fi
 PLATFORM=`cat PLATFORM`
-wget -q -O - http://edwardslab.bmcb.georgetown.edu/software/downloads/Galaxy/cptac-galaxy$VERSION.$PLATFORM.tgz | tar xvzf -
+wget -q -O - http://cptac-cdap.georgetown.edu.s3-website-us-east-1.amazonaws.com/cptac-galaxy$VERSION.$PLATFORM.tgz | tar xvzf -
 if [ "$PLATFORM" = "python27"  ]; then
   sed -i "s%#\!bin/python$%#\!$PWD/bin/python%" *.py
 fi

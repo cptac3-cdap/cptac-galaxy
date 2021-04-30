@@ -5,8 +5,9 @@ from collections import defaultdict
 from subprocess import Popen
 
 class DatafileCollection(object):
-    scriptdirs = [ "cptacdcc", os.path.join("..","lib","cptacdcc") ]
-    resources = ["portal","portalurl","url","dcc","dcctr","s3","local"]
+    scriptdirs = [ "cptacdcc", 
+                   os.path.join("..","lib","cptac3-cdap","cptac-dcc","cptacdcc") ]
+    resources = ["portal","portalurl","url","dcc","dcctr","s3","local","rclone","pdc","pdcdev"]
 
     def __init__(self,credentials=None):
 	self._files = defaultdict(dict)
@@ -36,6 +37,7 @@ class DatafileCollection(object):
 		break
         self.cptacportal = sp
 	self.s3 = os.path.join(os.path.split(sp)[0],"rclone","s3.sh")
+	self.rclone = os.path.join(os.path.split(sp)[0],"rclone","rclone.sh")
 	self.credentials = credentials
 
     def __iter__(self):
@@ -97,10 +99,10 @@ class DatafileCollection(object):
             if infiledir and not os.path.exists(cksumfile):
 		if os.path.exists(os.path.join(infiledir,cksumfile)):                                         
                      cksumfile = os.path.join(infiledir,cksumfile)
-            fileroot=(sl[2] if len(sl) > 2 else None)
+            extraparams=(sl[2] if len(sl) > 2 else None)
             if outdir != '.':
                 folder = os.path.join(outdir,folder)
-            self.add(resource,cksumfile,prefixpath=fileroot,outdir=folder,position=position)
+            self.add(resource,cksumfile,extraparams=extraparams,outdir=folder,position=position)
 	
 	if close:
 	    infile.close()
@@ -119,21 +121,47 @@ class DatafileCollection(object):
 
     def addstr(self,s,outdir='.'):
 
-        fileroot = None
+        extraparams = None
         spls = map(str.strip,s.split(':'))
 
         if len(spls) == 2:
             resource,cksumfile = spls
         elif len(spls) == 3:
-            resource,cksumfile,fileroot = spls
+            resource,cksumfile,extraparams = spls
         elif lns(spls) == 4:
-            folder,resource,cksumfile,fileroot = spls
+            folder,resource,cksumfile,extraparams = spls
         else:
             raise RuntimeError("can't parse --data argument")
 
-        self.add(resource,cksumfile,fileroot,outdir)
+        self.add(resource,cksumfile,extraparams,outdir)
               
-    def add(self,resource,cksumdata,prefixpath=None,outdir='.',position=1):
+    def add(self,resource,cksumdata,extraparams=None,outdir='.',position=1):
+
+	params = {}
+	if extraparams != None:
+	    splparams = re.split(r';([a-z]+)=',';'+extraparams.strip())
+	    if len(splparams) == 1:
+		params['prefixpath'] = extraparams.strip()
+	    else:
+		for i in range(1,len(splparams),2):
+		    params[splparams[i]] = splparams[i+1].strip()
+
+	prefixpath = None
+	if params.get('prefixpath'):
+	    prefixpath = params['prefixpath']
+	fullpathfmt = None
+	if params.get('fullpathfmt'):
+	    fullpathfmt = params.get('fullpathfmt')
+	filenameregex = None
+	if params.get('filenameextn'):
+	    filenameregex = '\.'+re.escape(params['filenameextn'])+'$'
+	if params.get('filenameregex'):
+	    filenameregex = params['filenameregex']
+	if filenameregex != None:
+	    filenameregex = re.compile(filenameregex)
+        cksumfmt = "DCC"
+	if params.get('cksumfmt'):
+	    cksumfmt = params['cksumfmt']
 
         if not cksumdata.endswith(".cksum"):
             raise RuntimeError("Bad checksum file path: %s"%(cksumdata,))
@@ -143,12 +171,18 @@ class DatafileCollection(object):
         h = None
 
         if os.path.exists(cksumdata) and resource != 'local':
-	    if not prefixpath:
-                raise RuntimeError("Prefix path required for file-based cksum file.")
+	    if not fullpathfmt and not prefixpath:
+                raise RuntimeError("Prefix path or full path format required for file-based cksum file.")
 
             h = open(cksumdata)
-	    if resource.startswith('dcc'):
+	    if resource.startswith('dcc/'):
 	        resource,username = resource.split('/')
+	    elif resource.startswith('rclone/'):
+	        resource,remote = resource.split('/')
+	    elif resource == 'rclone' and prefixpath != None and ':' in prefixpath:
+		remote,prefixpath = prefixpath.split(':',1)
+	    elif resource == 'rclone' and fullpathfmt != None and ':' in fullpathfmt:
+		remote,fullpathfmt = fullpathfmt.split(':',1)
 
         else:
 
@@ -156,14 +190,14 @@ class DatafileCollection(object):
                 h = urllib.urlopen(cksumdata)
                 if h.getcode() != 200:
                     RuntimeError("[%s] Can't retrieve URL %s"%(resource,cksumdata))
-                if not prefixpath:
+                if not prefixpath and not fullpathfmt:
                     prefixpath = cksumdata[:-len('.cksum')]
 
             elif resource in ('portal','portalurl'):
                 h = urllib.urlopen('https://cptc-xfer.uis.georgetown.edu/publicData/'+cksumdata)
                 if h.getcode() != 200:
                     RuntimeError("[%s] Can't retrieve CPTAC Data Portal path %s"%(resource,cksumdata))
-                if not prefixpath:
+                if not prefixpath and not fullpathfmt:
                     if resource == 'portal':
                         prefixpath = cksumdata[:-len('.cksum')]
                     else:
@@ -171,24 +205,40 @@ class DatafileCollection(object):
 
 	    elif resource in ('s3',):
                 tmpdir = tempfile.mkdtemp(suffix="",prefix=".",dir=os.getcwd())
-                cmd = "%s %s"%(self.s3,cksumdata)
+                cmd = "\"%s\" \"%s\""%(self.s3,cksumdata)
                 proc = Popen(cmd,cwd=tmpdir,shell=True)
                 proc.wait()
                 cksumdatafile = os.path.join(tmpdir,cksumdata.rsplit('/',1)[1])
                 if not os.path.exists(cksumdatafile):
                     raise RuntimeError("[%s] Can't retrieve S3 path %s"%(resource,cksumdata))
                 h = open(cksumdatafile)
-                if not prefixpath:
+                if not prefixpath and not fullpathfmt:
                     prefixpath = cksumdata[:-len('.cksum')]
 
-	    elif resource in ('local',):
+	    elif resource.split('/')[0] == "rclone":
+		if '/' in resource:
+	            resource,remote = resource.split('/',1)
+		elif ":" in cksumdata:
+		    remote,cksumdata = cksumdata.split(":",1)
+                tmpdir = tempfile.mkdtemp(suffix="",prefix=".",dir=os.getcwd())
+                cmd = "\"%s\" \"%s\" \"%s\""%(self.rclone,remote,cksumdata)
+                proc = Popen(cmd,cwd=tmpdir,shell=True)
+                proc.wait()
+                cksumdatafile = os.path.join(tmpdir,cksumdata.rsplit('/',1)[1])
+                if not os.path.exists(cksumdatafile):
+                    raise RuntimeError("[%s] Can't retrieve path %s:%s"%("rclone",remote,cksumdata))
+                h = open(cksumdatafile)
+                if not prefixpath and not fullpathfmt:
+                    prefixpath = cksumdata[:-len('.cksum')]
+
+	    elif resource in ('local','pdc','pdcdev'):
                 if not os.path.exists(cksumdata):
                     raise RuntimeError("[%s] Can't retrieve local path %s"%(resource,cksumdata))
 		h = open(cksumdata)
-                if not prefixpath:
+                if not prefixpath and not fullpathfmt:
                     prefixpath = cksumdata[:-len('.cksum')]
 
-            elif resource.startswith('dcc'):
+            elif resource.startswith('dcc/'):
 		if self._dccreqcount > 0 and self._dccreqcount % self._dccreqwaitfreq == 0:
                     time.sleep(self._dccreqwait)
 		self._dccreqcount += 1
@@ -225,7 +275,7 @@ Password = %s
                 if proc.returncode != 0 or not os.path.exists(cksumdatafile):
                     raise RuntimeError("[%s] Can't retrieve CPTAC DCC path %s"%(resource,cksumdata))
                 h = open(cksumdatafile)
-                if not prefixpath:
+                if not prefixpath and not fullpathfmt:
                     prefixpath = cksumdata[:-len('.cksum')]
 		if credfile:
 		    os.unlink(credfile)
@@ -233,12 +283,32 @@ Password = %s
         if not h:
             raise RuntimeError("[%s] Bad file handle for %s"%(resource,cksumdata))
 
+	if fullpathfmt == None:
+	    assert(prefixpath)
+	    fullpathfmt = prefixpath + '/%s'
+
         for l in h:
-            sline = l.rstrip().split('\t',3)
+	    sline = []
+	    if cksumfmt == "DCC":
+                sline = map(str.strip,l.rstrip().split('\t',3))
+	    elif cksumfmt == "sha1sum":
+                sline = map(str.strip,l.split())
+		sline = ["",sline[0],"",sline[1].lstrip("*")]
+	    elif cksumfmt == "md5sum":
+                sline = map(str.strip,l.split())
+		sline = [sline[0],"","",sline[1].lstrip("*")]
+
 	    if len(sline) != 4:
 		raise RuntimeError("Bad format for cksum file %s"%(cksumdata,))
-            sline[3] = prefixpath + '/' + sline[3]
-            dirname,filename = sline[3].rsplit('/',1)
+	    if filenameregex != None and not filenameregex.search(sline[3]):
+		continue
+            sline[3] = fullpathfmt%(sline[3],)
+	    if resource == "rclone":
+		sline[3] = remote+":"+sline[3]
+	    if resource == "url":
+                dirname,filename = sline[3].split('?')[0].rsplit('/',1)
+	    else:
+                dirname,filename = sline[3].rsplit('/',1)
             basename,fileext = self.dssplit(filename)
 	    self._positions.add(position)
             self._files[basename][position] = \
@@ -254,8 +324,9 @@ Password = %s
 		     username=username,
                      results=outdir)
 
+	h.close()
         if tmpdir:
-            shutil.rmtree(tmpdir, ignore_errors=True)
+	    shutil.rmtree(tmpdir, ignore_errors=True)
 
 if __name__ == '__main__':
     

@@ -32,6 +32,7 @@ parser.add_option("--outdir",dest="outdir",help="Output directory prefix. Defaul
 parser.add_option("-i","--idle",dest="idle",type="int",default=2,
                   help="Max. idle workflow executions. Default: 2.")
 
+
 advanced.add_option("--sleep",dest="sleep",type="int",default=60,
 		    help="Time, in seconds, between polling the Galaxy history. Default: 60 seconds.")
 advanced.add_option("--sched_sleep",dest="sched_sleep",type="int",default=15,
@@ -40,9 +41,15 @@ advanced.add_option("--max_complete",dest="max_complete",type="int",default=-1,
 		    help="Max. complete collections before forcing download. Default: No limit.")
 advanced.add_option("--max_download",dest="max_download",type="int",default=-1,
 		    help="Max. output file collections to download, per iteration. Default: No limit.")
+advanced.add_option("--max_retries",dest="max_retries",type="int",default=3,
+		    help="Max. retries to run the workflow for a datafile. Default: 3.")
+advanced.add_option("--min_disk",dest="min_disk",type="float",default=0.1,
+                  help="Min. disk space available to schedule a new workflow execution. Numbers between 0 and 1 indicate a proportion, numbers greater than 1 indicate Gb. Default: 10%.")
 advanced.add_option("--remote",dest="remote",action="store_true",default=False,
 	            help="Run batch execute script on AWS cluster, rather than locally. Default: False")
 advanced.add_option("--remote_jobname",dest="remote_jobname",help="Remote batch execute script job name.",default=None)
+advanced.add_option("--remote_nostatus",dest="remote_nostatus",action="store_true",default=False,
+	            help="Start remote job only, no execution status. Default: False")
 advanced.add_option("--terminate_when_done",dest="terminate",action="store_true",default=False,
 	            help="Terminate cluster when finished. Default: False")
 parser.add_option_group(advanced)
@@ -72,7 +79,10 @@ from bioblend.galaxy import GalaxyInstance
 from bioblend.galaxy.dataset_collections import CollectionDescription, HistoryDatasetElement
 gi = GalaxyInstance(url=url,key=apikey)
 gi.verify=False
-gi.histories.set_max_get_retries(3)
+gi.histories.set_max_get_retries(10)
+gi.tools.set_max_get_retries(10)
+gi.workflows.set_max_get_retries(10)
+gi.datasets.set_max_get_retries(10)
 
 wfname2id = {}
 for wf in gi.workflows.get_workflows():
@@ -101,10 +111,16 @@ if opts.remote or opts.remote_jobname:
             uploads.append(f)
             args['file'].append(os.path.split(f)[1])
     if opts.data:
+	dirstocheck = set()
         args['data'] = []
         for f in opts.data:
             uploads.append(f)
             args['data'].append(os.path.split(f)[1])
+	    dirstocheck.add(os.path.split(os.path.abspath(f))[0])
+	for d in dirstocheck:
+	    for fn in glob.glob(os.path.join(d,"*.cksum")):
+		uploads.append(fn)
+
     jobid = opts.remote_jobname
     for a in ("idle","sleep","sched_sleep","max_complete","max_download"):
         if hasattr(opts,a) and getattr(opts,a):
@@ -116,7 +132,8 @@ if opts.remote or opts.remote_jobname:
             args['param'].append(p)
     jobid = cluster.setup_job(jobid,uploads,**args)
     cluster.start_job(jobid)
-    cluster.status_job(jobid)
+    if not opts.remote_nostatus:
+        cluster.status_job(jobid)
     sys.exit(0)
 
 wfinput = dict()
@@ -136,7 +153,7 @@ if opts.hist:
     if len(his) > 1:
 	print >>sys.stderr, "Too many histories match: %s"%(opts.hist,)
 	sys.exit(1)
-    if len(his) ==1:
+    if len(his) == 1:
 	hi = his[0]
     else:
         hi = gi.histories.create_history(opts.hist).get('id')
@@ -151,9 +168,11 @@ if opts.file:
   for i,f in enumerate(opts.file):
     fname = os.path.split(f)[1]
     fid = None
-    for di in gi.histories.show_matching_datasets(hi,fname):
-	fid = di['id']
-	break
+    for di in gi.histories.show_matching_datasets(hi,re.compile("^%s$"%(re.escape(fname),))):
+        id,name,state,visible,deleted = map(di.get,('id','name','state','visible','deleted'))
+	if visible and not deleted and state == "ok":
+	    fid = id
+	    break
     if not fid:
         fid = gi.tools.upload_file(f,hi,file_name=fname)['outputs'][0]['id']
     inputfiles.append((wfinput[('data_input',i)],fid))
@@ -181,10 +200,65 @@ def getdone(history):
         all.add(base1)
     return (all-notdone)
 
+def geterror(history):
+    error = set()
+    for di in gi.histories.show_history(history,contents=True,deleted=False,visible=True,details=True):
+	name,state = map(di.get,('name','state'))
+        base1,extn = DatafileCollection.dssplit(name)
+        if state == 'error':
+            error.add(base1)
+    return error
+
+def remove(history,base):
+    for di in gi.histories.show_matching_datasets(history,re.compile("^%s[-.]"%(re.escape(base),))):
+        id,name,state,visible,deleted = map(di.get,('id','name','state','visible','deleted'))
+	if name in uploaded:
+	    continue
+	gi.histories.delete_dataset(history,id)
+	gi.histories.delete_dataset(history,id,purge=True)
+
 def download(history,base):
-	for di in gi.histories.show_matching_datasets(history,"^%s[-.].*"%(base,)):
+        jobmetrics = defaultdict(dict)
+	for di in gi.histories.show_matching_datasets(history,re.compile("^%s[-.]"%(re.escape(base),))):
 	    id,name,state,visible,deleted = map(di.get,('id','name','state','visible','deleted'))
-	    # print id,name,state,visible,deleted
+	    prov = gi.histories.show_dataset_provenance(history,di.get('id'))
+	    if not deleted and prov['job_id'] not in jobmetrics:
+	        job = gi.jobs.show_job(prov['job_id'],full_details=True)
+                for metric in job['job_metrics']:
+		    if metric['name'] == 'runtime_seconds':
+		        jobmetrics[job.get('id')]['runtime'] = float(metric['raw_value'])
+		    if metric['name'] == 'start_epoch':
+		        jobmetrics[job.get('id')]['start'] = float(metric['raw_value'])
+		    if metric['name'] == 'end_epoch':
+		        jobmetrics[job.get('id')]['end'] = float(metric['raw_value'])
+		create_time = datetime.datetime.strptime(di['create_time'],"%Y-%m-%dT%H:%M:%S.%f")
+		create_seconds = (create_time - datetime.datetime.utcfromtimestamp(0)).total_seconds()
+		jobmetrics[job.get('id')]['created'] = create_seconds
+		if 'start' in jobmetrics[job.get('id')]:
+		     jobmetrics[job.get('id')]['waiting'] = jobmetrics[job.get('id')]['start'] - jobmetrics[job.get('id')]['created']
+		     jobmetrics[job.get('id')]['elapsed'] = jobmetrics[job.get('id')]['end'] - jobmetrics[job.get('id')]['start']
+	        else:
+		    firstline = None; lastline = None;
+		    for l in prov['stdout'].splitlines():
+			if firstline == None:
+			    firstline = l.strip()
+			lastline = l.strip()
+		    if firstline != None and lastline != None:
+			starttime = None; endtime = None;
+		        if firstline.split()[-1] == "Start":
+			    try:
+			        starttime = datetime.datetime.strptime(firstline[1:].split(']')[0],"%a %b %d %H:%M:%S %Y")
+			    except ValueError:
+				pass
+		        if lastline.split()[-1] == "Finish":
+			    try:
+			        endtime = datetime.datetime.strptime(lastline[1:].split(']')[0],"%a %b %d %H:%M:%S %Y")
+			    except ValueError:
+				pass
+		        if starttime != None and endtime != None:
+		            jobmetrics[job.get('id')]['runtime'] = (endtime-starttime).total_seconds()
+
+	    # print id,name,state,visible,deleted,jobmetrics[prov['job_id']]
 	    assert(state == 'ok' or deleted or not visible)
 	    assert(base in items)
             if visible and not deleted and name not in uploaded:
@@ -227,6 +301,10 @@ def download(history,base):
 	    gi.histories.delete_dataset(history,id)
 	    gi.histories.delete_dataset(history,id,purge=True)
 	    # print >>sys.stderr, "Deleted %s."%(name,)
+        running_time = sum(map(lambda d: d.get('runtime',0.0),jobmetrics.values()))
+        create_time = min(map(lambda d: d.get('created',1e+20),jobmetrics.values()))
+        done_time = max(map(lambda d: d.get('end',0.0),jobmetrics.values()))
+	return dict(running=running_time, start=create_time, finish=done_time)
 
 def getstatus(history,histname,url,items):
     print >>sys.stderr, "Status: %s (%s) [%s]"%(histname,url,datetime.datetime.now().ctime())
@@ -304,62 +382,90 @@ if opts.data != None:
     positions = sorted(items.positions())
 elif opts.file != None:
     base,extn = DatafileCollection.dssplit(os.path.split(opts.file[0])[1])
-    items = {base: {0: dict(filename=base+".cksum",results="")}}
+    items = {base: {0: dict(filename=base+".psm",results="")}}
     positions = [0]
 else:
     items = {"": {0: dict()}}
     positions = [0]
 
+# print >>sys.stderr, items, positions
+
 itembase = sorted(items.keys())
 currentitem = 0
-currentbase = itembase[currentitem]
 nitems = len(itembase)
 minposition = positions[0]
-skipped = 0
-downloaded = 0
+downloaded = set()
+skipped = set()
+retries = defaultdict(int)
 
 climit = 1e+20 if opts.max_complete <= 0 else opts.max_complete
 ilimit = opts.idle
+statistics = defaultdict(dict)
 
 while True:
 
     allbase,idle,running,error,done,jobcnt = getstatus(hi,opts.hist,url,items)
     assert(len(allbase) == (idle+running+error+done))
-    waiting = nitems-len(allbase)-skipped-downloaded
-    print >>sys.stderr, "Workflows: Waiting %d, Idle %d, Running %d, Error %d, Complete %d, Downloaded %d, Skipped %d"%(waiting, idle, running, error, done, downloaded, skipped)
+    waiting = nitems-len(allbase)-len(skipped)-len(downloaded)
+    failed = set(map(lambda t: t[0],filter(lambda t: t[1] >= opts.max_retries,retries.items())))
+    print >>sys.stderr, "Workflows: Waiting %d, Idle %d, Running %d, Error %d, Complete %d, Downloaded %d, Skipped %d, Failed %d, Done %d, Total %d"%(waiting, idle, running, error, done, len(downloaded), len(skipped), len(failed), len(downloaded)+len(skipped),nitems)
     if cmi:
         st = getcmstatus(cmi)
         print >>sys.stderr, "Instances: " + ", ".join(map(lambda i: "%s [%.0f%%]"%(i,st['nodes'][i]),sorted(st['nodes'],key=nodekey)))
         print >>sys.stderr, "     Jobs: " + ", ".join(map(lambda st: st.title() + " " + "+".join(map(lambda pl: "%s"%(jobcnt[pl][st],), ('local','slurm','pulsar'))),('running','queued')))
         print >>sys.stderr, "     Disk: %s/%s [%s]"%(st['disk_used'],st['disk_total'],st['disk_percent'])
+        disk_too_full = False
+        if 0 < opts.min_disk < 1 and (100-float(st['disk_percent'].strip('%'))) < opts.min_disk*100.0:
+	    disk_too_full = True
+	elif opts.min_disk >= 1 and (float(st['disk_total'].strip('G'))-float(st['disk_used'].strip('G'))) < opts.min_disk:
+	    disk_too_full = True
     else:
         print >>sys.stderr, "     Jobs: " + ", ".join(map(lambda st: st.title() + " " + "+".join(map(lambda pl: "%s"%(jobcnt[pl][st],), ('local','slurm','pulsar'))),('running','queued')))
+        disk_too_full = False
     print >>sys.stderr, ""
 
-    while currentitem < nitems:
+    # Look for an item yet to be executed...
+    passes = 0
+    while passes <= 2:
 	currentbase = itembase[currentitem]
+	# print >>sys.stderr, items[currentbase]
 	(filenames,folders) = map(lambda k: map(lambda d: d.get(k),map(lambda p: items[currentbase][p],positions)),["filename","results"])
 	folder = folders[0] # only first one applies
 	if opts.outdir:
 	    folder = os.path.join(opts.outdir,folder)
         if len(glob.glob("%s/%s.*"%(folder,currentbase,))) > 0:
-	    print >>sys.stderr, "File%s %s skipped."%("s" if len(filenames)>1 else "",", ".join(filenames))
-	    skipped += 1
+	    # print >>sys.stderr, "File%s %s skipped."%("s" if len(filenames)>1 else "",", ".join(filenames))
+	    if currentbase not in downloaded:
+	        skipped.add(currentbase)
 	    currentitem += 1
+	    if currentitem >= nitems:
+	        passes += 1
+		currentitem = 0
 	    continue
-	if opts.data and currentbase in allbase:
-	    print >>sys.stderr, "File%s %s already executing."%("s" if len(filenames)>1 else "",", ".join(filenames))
+	if currentbase in allbase:
+	    # print >>sys.stderr, "File%s %s already executing."%("s" if len(filenames)>1 else "",", ".join(filenames))
 	    currentitem += 1
+	    if currentitem >= nitems:
+	        passes += 1
+		currentitem = 0
 	    continue
+	if opts.data and retries.get(currentbase,-1) >= opts.max_retries:
+	    currentitem += 1
+	    if currentitem >= nitems:
+	        passes += 1
+		currentitem = 0
+	    continue
+	    
 	break
 
-    if len(allbase) == 0 and currentitem >= nitems:
+    # No workflows in process, and no items yet to be processed...
+    if len(allbase) == len(failed) and passes >= 2:
         break
 
-    if error >= 3 and (done + running) == 0:
+    if len(error) > 10:
 	break
-    
-    if idle < ilimit and done < climit and currentitem < nitems and error < 3:
+
+    if idle < ilimit and done < climit and passes < 2 and not disk_too_full:
 	(md5hash,sha1hash,bytes,fullpath,filename,resource,username,base) = map(lambda k: map(lambda d: d.get(k),map(lambda p: items[currentbase][p],positions)),["md5hash","sha1hash","sizehash","filepath","filename","resource","username","base"])
 	assert(len(set(base)) == 1)
 	base = base.pop()
@@ -388,14 +494,14 @@ while True:
 	        print >>sys.stderr, "Schedule %s..."%(opts.wf,),
             gi.workflows.invoke_workflow(wfname2id[opts.wf],inputs,params,history_id=hi)
 	    print >>sys.stderr, "done."
+	    # statistics[currentbase]['start'] = time.time()
 	    if True or opts.data:
 
                 print >>sys.stderr, 'Waiting for %s...'%", ".join(filename),
                 time.sleep(opts.sched_sleep)
 	        while True:
 		    count = 0
-		    for di in gi.histories.show_matching_datasets(hi,r"%s\..*"%(currentbase,)):
-		        # print di['name']
+		    for di in gi.histories.show_matching_datasets(hi,re.compile(r"^%s[-.]"%(re.escape(currentbase),))):
 			if di['name'] not in filename:
 			    continue
 		        if not di.get('purged',False) and not di.get('deleted',False):
@@ -411,21 +517,47 @@ while True:
                 print >>sys.stderr, 'awake.\n'
 
 	    currentitem += 1
+	    if currentitem >= nitems:
+		currentitem = 0
 	    continue
 
     if done > 0:
 	for i,base in enumerate(getdone(hi)):
 	    if base in items:
-	        download(hi,base)
-	        downloaded += 1
+	        statistics[base].update(download(hi,base))
+		if 'start' in statistics[base]:
+		    statistics[base]['name'] = base
+		    statistics[base]['elapsed'] = statistics[base]['finish'] - statistics[base]['start'] 
+		    statistics[base]['elapsed_hours'] = round(statistics[base]['elapsed']/3600.0,2)
+		    statistics[base]['attempts'] = retries.get(base,0)+1
+		    statistics[base]['running_hours'] = round(statistics[base]['running']/3600.0,2)
+		    statistics[base]['idle'] = max(0.0,statistics[base]['elapsed'] - statistics[base]['running'])
+		    statistics[base]['idle_hours'] = max(0.0,statistics[base]['elapsed_hours'] - statistics[base]['running_hours'])
+		    print >>sys.stderr, "%(name)s: elapsed %(elapsed_hours).2f hrs, running %(running_hours).2f hrs, idle %(idle_hours).2f hrs, attempts %(attempts)d"%statistics[base]
+	        downloaded.add(base)
+		if base in retries:
+		    del retries[base]
 	    if opts.max_download > 0 and (i+1) >= opts.max_download:
 		break
+	print >>sys.stderr, ""
+	continue
+
+    if error > len(failed):
+	for base in geterror(hi):
+	    if base in failed:
+		continue
+	    retries[base] += 1
+	    if retries.get(base,-1) < opts.max_retries:
+	        print >>sys.stderr, "Removing workflow jobs due to error: %s"%(base,)
+	        # remove all files for this base from the history
+	        remove(hi,base)
 	print >>sys.stderr, ""
 	continue
 
     print >>sys.stderr, 'Sleeping...',
     time.sleep(opts.sleep)
     print >>sys.stderr, 'awake.\n'
+
 
 if opts.terminate and opts.cluster:
    import subprocess
@@ -436,5 +568,12 @@ if opts.terminate and opts.cluster:
    cmd = [ os.path.join(scriptdir,'terminate%s'%(scriptextn,)), opts.cluster ]
    subprocess.call(cmd)
 
+exitcode = 0
+for base in retries:
+    if retries.get(base,-1) > 0:
+        print >>sys.stderr, "Dataset %s failed %d times, analysis not complete."%(base,retries[base])
+        exitcode = 1
 
-   
+print >>sys.stderr, "Done."
+sys.exit(exitcode)
+

@@ -19,11 +19,12 @@ Options:
 
 Parameter file sets the follwing variables:
 
-  SPECIES={Human,Mouse,Rat,Human+Mouse}
-  PROTEOME={Proteome,Phosphoproteome}
-  QUANT={TMT6,TMT10,TMT11,iTRAQ}
-  BATCH=<TMT label batch>
-  SPECFDR=<FDR% for parsimony <= 1.0>
+  SPECIES="{Human,Mouse,Rat,Human+Mouse}"
+  PROTEOME="{Proteome,Phosphoproteome,Acetylome,Ubiquitylome,Glycoproteome}"
+  QUANT="{TMT6,TMT10,TMT11,iTRAQ,Label-free}"
+  BATCH="<TMT label batch(es)>" #Optional. Space separated batch names
+  TARGETFDR="<Protein FDR%>" #Optional. Default is 1.0%
+  INITSPECFDR="<Spec. FDR%>" #Optional. Default is \$TARGETFDR
 
 Files <base>.mzIdentML.txt, <base>.sample.txt, <base>.qcmetrics.tsv, \$BATCH.txt are expected in the same directory as <base>.params.
 
@@ -50,6 +51,10 @@ fi
 
 shift $(($OPTIND - 1)) 
 
+if [ "$1" = "" ]; then
+  help "Parameter file not provided on the command-line"
+fi
+
 DIR=`dirname "$0"`
 DIR=`readlink -f "$DIR"`
 EXECUTE="$DIR/execute"
@@ -61,9 +66,16 @@ MZID="$WORK/$BASE.mzIdentML.txt"
 SAMP="$WORK/$BASE.sample.txt"
 QCMT="$WORK/$BASE.qcmetrics.tsv"
 
-shift; shift
+shift
+if [ "$1" = "--" ]; then
+  shift
+fi
 
 EXTRA="$@"
+
+if [ "$EXTRA" = "" ]; then
+    EXTRA="--max_retries 0"
+fi
 
 if [ "$SPECIES" = "" ]; then
     help "SPECIES missing from parameter file $1"
@@ -74,12 +86,17 @@ fi
 if [ "$QUANT" = "" ]; then
     help "QUANT missing from parameter file $1"
 fi
-if [ "$SPECFDR" = "" ]; then
-    help "SPECFDR missing from parameter file $1"
-fi
+
 # if [ "$BATCH" = "" ]; then
 #     help "BATCH missing from parameter file $1"
 # fi
+
+if [ "$TARGETFDR" = "" ]; then
+    TARGETFDR="1.0"
+fi
+if [ "$INITSPECFDR" = "" ]; then
+    INITSPECFDR="$TARGETFDR"
+fi
 
 if [ ! -f "$MZID" ]; then
     help "MZID file \"$MZID\" not found"
@@ -99,6 +116,21 @@ if [ ! -f "$QCMT" ]; then
     help "QC metrics file \"$QCMT\" not found"
 fi
 
+case $SPECIES in
+  Human|Mouse|Rat|Human+Mouse) ;;
+  *) help "Bad SPECIES $SPECIES in parameter file" ;;
+esac
+                                                                                                                             
+case $PROTEOME in
+  Proteome|Phosphoproteome|Acetylome|Ubiquitylome|Glycoproteome) ;;
+  *) help "Bad PROTEOME $PROTEOME in parameter file" ;;
+esac
+
+case $QUANT in
+  TMT6|TMT10|TMT11|iTRAQ|Label-Free) ;;
+  *) help "Bad QUANT $QUANT in parameter file" ;;
+esac
+
 SPECIES_FOR_WF="$SPECIES"
 if [ "$SPECIES" = "Human+Mouse" ]; then
   SPECIES_FOR_WF="Human-Mouse Xenograft"
@@ -111,7 +143,7 @@ fi
 
 if [ $GENEFDR -eq 1 ]; then
   FILES="--file \"$MZID\" "
-  PARAM="--param cdapreports_parsnipmayug:1:specfdr:$SPECFDR"
+  PARAM="--param cdapreports_parsnipfdr:1:initspecfdr:$INITSPECFDR --param cdapreports_parsnipfdr:1:targetprotfdr:$TARGETFDR"
   WORKFLOW="Summary Reports: $SPECIES_FOR_WF Gene FDR Estimation"
 else
   BATCHFILES=""
@@ -119,15 +151,19 @@ else
       BATCHFILES="$BATCHFILES --file \"$WORK/$B.txt\" "
   done
   FILES="--file \"$MZID\" --file \"$SAMP\" $BATCHFILES --file \"$QCMT\" "
-  if [ "$PROTEOME" = "Proteome"  ]; then
-    PARAM="--param cdapreports_parsnip:1:specfdr:$SPECFDR"
-  elif [ "$PROTEOME" = "Phosphoproteome" ]; then
-    PARAM="--param cdapreports_parsnip:1:specfdr:$SPECFDR --param cdapreports_parsnip:2:specfdr:$SPECFDR"
-  fi
+  PARAM="--param cdapreports_parsnipfdr:1:initspecfdr:$INITSPECFDR --param cdapreports_parsnipfdr:1:targetprotfdr:$TARGETFDR"
   WORKFLOW="Summary Reports: $SPECIES_FOR_WF, $QUANT_FOR_WF, $PROTEOME_FOR_WF"
 fi
-WORKFLOW="--workflow \"$WORKFLOW\" "
 
+echo "PARAMETERS:"
+echo "Species: $SPECIES"
+echo "Proteome: $PROTEOME"
+echo "Quantitation: $QUANT"
+echo "Label Reagent Batch IDs: $BATCH"
+echo "Workflow: $WORKFLOW"
+echo ""
+
+WORKFLOW="--workflow \"$WORKFLOW\" "
 CMD="$DIR/execute $WORKFLOW $FILES $PARAM $EXTRA"
 
 if [ $ECHO -eq 1 ]; then

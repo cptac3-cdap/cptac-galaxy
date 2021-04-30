@@ -72,6 +72,8 @@ for wfname in wfname2id:
     for key in list(wfdict['steps']):
 	wfdict['steps'][int(key)] = wfdict['steps'][key]
 	del wfdict['steps'][key]
+    if 'uuid' in wfdict:
+        del wfdict['uuid']
     wfstr = json.dumps(wfdict,sort_keys=True,indent=4)
     wffilepath = os.path.join(opts.directory,wffilename)
     if os.path.exists(wffilepath):
