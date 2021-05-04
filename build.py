@@ -36,7 +36,6 @@ includes = [
     'dfcoll.sh',
     'forportal.sh',
     '.defaults.ini',
-    'Identity_TMT10.txt',
     'pdcsetup.py',
     'PDC.py',
     'VERSION',
