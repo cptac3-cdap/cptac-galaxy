@@ -1,9 +1,9 @@
 #!bin/python
-import sys, os, os.path, time, datetime, urllib, glob, re, zipfile, tempfile, shutil
+import sys, os, os.path, time, datetime, urllib.request, urllib.parse, urllib.error, glob, re, zipfile, tempfile, shutil
 from operator import itemgetter
 from collections import defaultdict, Counter
-import ConfigParser
-from StringIO import StringIO
+import configparser
+from io import StringIO
 
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning, InsecurePlatformWarning, SNIMissingWarning
@@ -27,17 +27,17 @@ opts,args = parser.parse_args()
 if not opts.url:
 
     assert os.path.exists('.galaxy.ini')
-    config = ConfigParser.SafeConfigParser()
+    config = configparser.SafeConfigParser()
     config.read(['.galaxy.ini'])
 
     if not opts.cluster or not config.has_section(opts.cluster):
         if opts.cluster and not config.has_section(opts.cluster):
-	    print >>sys.stderr, "Cluster \"%s\" not found.\n"%(opts.cluster,)
-	print >>sys.stderr, "Available clusters:"
-	for sec in config.sections():
-	    if sec == 'GENERAL':
-		continue
-	    print >>sys.stderr, " ",sec
+            print("Cluster \"%s\" not found.\n"%(opts.cluster,), file=sys.stderr)
+        print("Available clusters:", file=sys.stderr)
+        for sec in config.sections():
+            if sec == 'GENERAL':
+                continue
+            print(" ",sec, file=sys.stderr)
         sys.exit(1)
 
     url = config.get(opts.cluster,'URL')
@@ -60,33 +60,33 @@ gi.verify=False
 
 hi = None
 if opts.hist:
-    his = map(lambda h: h.get('id'),gi.histories.get_histories(name=opts.hist))
+    his = [h.get('id') for h in gi.histories.get_histories(name=opts.hist)]
     if len(his) > 1:
-	print >>sys.stderr, "Too many histories match: %s"%(opts.hist,)
-	sys.exit(1)
+        print("Too many histories match: %s"%(opts.hist,), file=sys.stderr)
+        sys.exit(1)
     elif len(his) == 1:
-	hi = his[0]
+        hi = his[0]
     else:
-        print >>sys.stderr, "No histories match: %s"%(opts.hist,)
+        print("No histories match: %s"%(opts.hist,), file=sys.stderr)
 
 
 if not os.path.exists(opts.directory):
     os.makedirs(opts.directory)
 
 for di in gi.histories.show_history(hi,contents=True,deleted=False,visible=True,details=True):
-    id,name,state,visible,deleted = map(di.get,('id','name','state','visible','deleted'))
+    id,name,state,visible,deleted = list(map(di.get,('id','name','state','visible','deleted')))
     if not visible or deleted:
-	continue
+        continue
     if opts.regex != None and not opts.regex.search(name):
-	continue
+        continue
     if state == 'ok':
         filepath = os.path.join(opts.directory,name)
         i = 0
         while os.path.exists(filepath):
             i += 1
             filepath = "%s.%d"%(os.path.join(opts.directory,name),i)
-        print >>sys.stderr, "Downloading %s..."%(name,),
-	gi.datasets.download_dataset(id,file_path=filepath,use_default_filename=False,wait_for_completion=True)
+        print("Downloading %s..."%(name,), end=' ', file=sys.stderr)
+        gi.datasets.download_dataset(id,file_path=filepath,use_default_filename=False,wait_for_completion=True)
         if name.endswith('.html'):
             try:
                 zf = zipfile.ZipFile(filepath)
@@ -100,21 +100,21 @@ for di in gi.histories.show_history(hi,contents=True,deleted=False,visible=True,
                 shutil.rmtree(tmpdir)
             except zipfile.BadZipfile:
                 pass
-	print >>sys.stderr, "done."
+        print("done.", file=sys.stderr)
 
         if not opts.stdout and not opts.stderr:
-	    continue
-	
-	stdoutdata,stderrdata = map(gi.histories.show_dataset_provenance(hi,id).get,["stdout","stderr"])
-	if opts.stdout and stdoutdata.strip():
-            print >>sys.stderr, "Downloading %s..."%(name+'.stdout',),
-	    wh = open(filepath+'.stdout','w')
-	    wh.write(stdoutdata)
-	    wh.close()
-	    print >>sys.stderr, "done."
-	if opts.stderr and stderrdata.strip():
-            print >>sys.stderr, "Downloading %s..."%(name+'.stderr',),
-	    wh = open(filepath+'.stderr','w')
-	    wh.write(stderrdata)
-	    wh.close()
-	    print >>sys.stderr, "done."
+            continue
+
+        stdoutdata,stderrdata = list(map(gi.histories.show_dataset_provenance(hi,id).get,["stdout","stderr"]))
+        if opts.stdout and stdoutdata.strip():
+            print("Downloading %s..."%(name+'.stdout',), end=' ', file=sys.stderr)
+            wh = open(filepath+'.stdout','w')
+            wh.write(stdoutdata)
+            wh.close()
+            print("done.", file=sys.stderr)
+        if opts.stderr and stderrdata.strip():
+            print("Downloading %s..."%(name+'.stderr',), end=' ', file=sys.stderr)
+            wh = open(filepath+'.stderr','w')
+            wh.write(stderrdata)
+            wh.close()
+            print("done.", file=sys.stderr)

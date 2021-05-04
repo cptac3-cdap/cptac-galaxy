@@ -46,27 +46,27 @@ To do:
     * Describe on-disk file structures in the documentation.
 """
 
-from __future__ import division###, with_statement
+###, with_statement
 
 import socket
 import os
 import threading
 import time
 import errno
-import thread
+import _thread
 import sys, os.path, re, glob
 
 def quiet_unlink(filename):
     try:
-	os.unlink(filename)
+        os.unlink(filename)
     except (OSError,IOError):
-	pass
+        pass
 
 def quiet_nlink(filename):
     try:
         nlink = os.stat(filename).st_nlink
     except (IOError,OSError):
-	nlink = None
+        nlink = None
     return nlink
 
 class Error(Exception):
@@ -163,7 +163,7 @@ class LockBase:
         self.hostname = socket.gethostname()
         self.pid = os.getpid()
         if threaded:
-            tname = "%x-" % thread.get_ident()
+            tname = "%x-" % _thread.get_ident()
         else:
             tname = ""
         dirname = os.path.dirname(self.lock_file)
@@ -171,17 +171,17 @@ class LockBase:
                                         "%s.%s%s" % (self.hostname,
                                                      tname,
                                                      self.pid))
-	self.unique_glob =  os.path.join(dirname,self.hostname+".*")
+        self.unique_glob =  os.path.join(dirname,self.hostname+".*")
 
     @staticmethod
     def unique_pid(unique_name):
-	m = re.search(r'^(\S+)\.((\S+)-)?(\d+)$',unique_name)
-	if not m:
-	    return None
-	try:
-	    return int(m.group(4))
-	except ValueError:
-	    return m.group(4)
+        m = re.search(r'^(\S+)\.((\S+)-)?(\d+)$',unique_name)
+        if not m:
+            return None
+        try:
+            return int(m.group(4))
+        except ValueError:
+            return m.group(4)
 
     def acquire(self, timeout=None):
         """
@@ -316,9 +316,9 @@ class LockBase:
         True
         >>> lock2.i_am_locking()
         False
-	>>> try:
-	...   lock2.acquire(timeout=2)
-	... except LockTimeout:
+        >>> try:
+        ...   lock2.acquire(timeout=2)
+        ... except LockTimeout:
         ...   lock2.break_lock()
         ...   lock2.is_locked()
         ...   lock1.is_locked()
@@ -385,19 +385,19 @@ class LinkFileLock(LockBase):
 
     def acquire(self, timeout=None):
 
-	for f in glob.glob(self.unique_glob):
-	    pid = self.unique_pid(f)
-	    if pid and os.path.exists("/proc") and not os.path.exists("/proc/%d"%pid):
-		quiet_unlink(f)
+        for f in glob.glob(self.unique_glob):
+            pid = self.unique_pid(f)
+            if pid and os.path.exists("/proc") and not os.path.exists("/proc/%d"%pid):
+                quiet_unlink(f)
 
-	nlink = quiet_nlink(self.lock_file)
-	if nlink != None and nlink < 2:
-	    self.break_lock()
+        nlink = quiet_nlink(self.lock_file)
+        if nlink != None and nlink < 2:
+            self.break_lock()
 
         try:
             open(self.unique_name, "wb")
-        except IOError, e:
-            raise LockFailed, e
+        except IOError as e:
+            raise LockFailed(e)
 
         end_time = time.time()
         if timeout is not None and timeout > 0:
@@ -433,7 +433,7 @@ class LinkFileLock(LockBase):
         elif not os.path.exists(self.unique_name):
             raise NotMyLock
         os.unlink(self.unique_name)
-	self.break_lock()
+        self.break_lock()
 
     def is_locked(self):
         return os.path.exists(self.lock_file)
@@ -444,7 +444,7 @@ class LinkFileLock(LockBase):
                 os.stat(self.unique_name).st_nlink == 2)
 
     def break_lock(self):
-	quiet_unlink(self.lock_file)
+        quiet_unlink(self.lock_file)
 
 class MkdirFileLock(LockBase):
     """Lock file by creating a directory."""
@@ -454,7 +454,7 @@ class MkdirFileLock(LockBase):
         """
         LockBase.__init__(self, path)
         if threaded:
-            tname = "%x-" % thread.get_ident()
+            tname = "%x-" % _thread.get_ident()
         else:
             tname = ""
         # Lock file itself is a directory.  Place the unique file name into
@@ -477,7 +477,7 @@ class MkdirFileLock(LockBase):
         while True:
             try:
                 os.mkdir(self.lock_file)
-            except OSError, err:
+            except OSError as err:
                 if err.errno == errno.EEXIST:
                     # Already locked.
                     if os.path.exists(self.unique_name):
@@ -529,12 +529,12 @@ class SQLiteFileLock(LockBase):
 
     def __init__(self, path, threaded=True):
         LockBase.__init__(self, path, threaded)
-        self.lock_file = unicode(self.lock_file)
-        self.unique_name = unicode(self.unique_name)
+        self.lock_file = str(self.lock_file)
+        self.unique_name = str(self.unique_name)
 
         import sqlite3
         self.connection = sqlite3.connect(SQLiteFileLock.testdb)
-        
+
         c = self.connection.cursor()
         try:
             c.execute("create table locks"
@@ -604,7 +604,7 @@ class SQLiteFileLock(LockBase):
         if not self.is_locked():
             raise NotLocked
         if not self.i_am_locking():
-            raise NotMyLock, ("locker:", self._who_is_locking(),
+            raise NotMyLock("locker:", self._who_is_locking(),
                               "me:", self.unique_name)
         cursor = self.connection.cursor()
         cursor.execute("delete from locks"
@@ -618,7 +618,7 @@ class SQLiteFileLock(LockBase):
                        "  where lock_file = ?",
                        (self.lock_file,))
         return cursor.fetchone()[0]
-        
+
     def is_locked(self):
         cursor = self.connection.cursor()
         cursor.execute("select * from locks"
@@ -694,7 +694,7 @@ def _test():
             f, t = runner.run(test)
             nfailed += f
             ntests += t
-        print FileLock.__name__, "tests:", ntests, "failed:", nfailed
+        print(FileLock.__name__, "tests:", ntests, "failed:", nfailed)
         return nfailed, ntests
 
     nfailed = ntests = 0
@@ -714,16 +714,16 @@ def _test():
     try:
         import sqlite3
     except ImportError:
-        print "SQLite3 is unavailable - not testing SQLiteFileLock."
+        print("SQLite3 is unavailable - not testing SQLiteFileLock.")
     else:
-        print "Testing SQLiteFileLock with sqlite", sqlite3.sqlite_version,
-        print "& pysqlite", sqlite3.version
+        print("Testing SQLiteFileLock with sqlite", sqlite3.sqlite_version, end=' ')
+        print("& pysqlite", sqlite3.version)
         FileLock = SQLiteFileLock
         f, t = test_object(LockBase)
         nfailed += f
         ntests += t
 
-    print "total tests:", ntests, "total failed:", nfailed
+    print("total tests:", ntests, "total failed:", nfailed)
 
 if __name__ == "__main__":
     _test()

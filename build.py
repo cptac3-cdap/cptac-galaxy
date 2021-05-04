@@ -42,8 +42,8 @@ includes = [
     'VERSION',
 ]
 
-buildOptions = dict(packages = [], excludes = [], includes = [], 
-		    include_files = includes)
+buildOptions = dict(packages = [], excludes = [], includes = [],
+                    include_files = includes)
 
 setup(name='CPTAC-Galaxy',
       version = open('VERSION').read(),

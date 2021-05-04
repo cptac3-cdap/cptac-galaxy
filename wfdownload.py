@@ -1,9 +1,9 @@
 #!bin/python
-import sys, os, os.path, time, datetime, urllib, glob, json, shutil
+import sys, os, os.path, time, datetime, urllib.request, urllib.parse, urllib.error, glob, json, shutil
 from operator import itemgetter
 from collections import defaultdict, Counter
-import ConfigParser
-from StringIO import StringIO
+import configparser
+from io import StringIO
 
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning, InsecurePlatformWarning, SNIMissingWarning
@@ -23,17 +23,17 @@ opts,args = parser.parse_args()
 if not opts.url:
 
     assert os.path.exists('.galaxy.ini')
-    config = ConfigParser.SafeConfigParser()
+    config = configparser.SafeConfigParser()
     config.read(['.galaxy.ini'])
 
     if not opts.cluster or not config.has_section(opts.cluster):
         if opts.cluster and not config.has_section(opts.cluster):
-	    print >>sys.stderr, "Cluster \"%s\" not found.\n"%(opts.cluster,)
-	print >>sys.stderr, "Available clusters:"
-	for sec in config.sections():
-	    if sec == 'GENERAL':
-		continue
-	    print >>sys.stderr, " ",sec
+            print("Cluster \"%s\" not found.\n"%(opts.cluster,), file=sys.stderr)
+        print("Available clusters:", file=sys.stderr)
+        for sec in config.sections():
+            if sec == 'GENERAL':
+                continue
+            print(" ",sec, file=sys.stderr)
         sys.exit(1)
 
     url = config.get(opts.cluster,'URL')
@@ -66,25 +66,25 @@ for wfname in wfname2id:
     try:
         wfdict = gi.workflows.export_workflow_json(wfname2id[wfname])
     except ConnectionError:
-        print >>sys.stderr, "Cannot download workflow %s"%(wfname,)
+        print("Cannot download workflow %s"%(wfname,), file=sys.stderr)
         continue
     wfdict['name'] = wfname
     for key in list(wfdict['steps']):
-	wfdict['steps'][int(key)] = wfdict['steps'][key]
-	del wfdict['steps'][key]
+        wfdict['steps'][int(key)] = wfdict['steps'][key]
+        del wfdict['steps'][key]
     if 'uuid' in wfdict:
         del wfdict['uuid']
     wfstr = json.dumps(wfdict,sort_keys=True,indent=4)
     wffilepath = os.path.join(opts.directory,wffilename)
     if os.path.exists(wffilepath):
-	oldwfstr = open(wffilepath).read()
-	if wfstr != oldwfstr:
-	    print >>sys.stderr, "Workflow %s modified, writing new workflow file"%(wfname,)
-	    shutil.move(wffilepath,wffilepath+'.bak')
-	else:
-	    continue
+        oldwfstr = open(wffilepath).read()
+        if wfstr != oldwfstr:
+            print("Workflow %s modified, writing new workflow file"%(wfname,), file=sys.stderr)
+            shutil.move(wffilepath,wffilepath+'.bak')
+        else:
+            continue
     else:
-	print >>sys.stderr, "Workflow %s is new, writing workflow file"%(wfname,)
+        print("Workflow %s is new, writing workflow file"%(wfname,), file=sys.stderr)
     wh = open(wffilepath,'w')
     wh.write(wfstr)
     wh.close()

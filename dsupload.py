@@ -1,9 +1,9 @@
 #!bin/python
-import sys, os, os.path, time, datetime, urllib, glob, re
+import sys, os, os.path, time, datetime, urllib.request, urllib.parse, urllib.error, glob, re
 from operator import itemgetter
 from collections import defaultdict, Counter
-import ConfigParser
-from StringIO import StringIO
+import configparser
+from io import StringIO
 
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning, InsecurePlatformWarning, SNIMissingWarning
@@ -24,17 +24,17 @@ opts,args = parser.parse_args()
 if not opts.url:
 
     assert os.path.exists('.galaxy.ini')
-    config = ConfigParser.SafeConfigParser()
+    config = configparser.SafeConfigParser()
     config.read(['.galaxy.ini'])
 
     if not opts.cluster or not config.has_section(opts.cluster):
         if opts.cluster and not config.has_section(opts.cluster):
-	    print >>sys.stderr, "Cluster \"%s\" not found.\n"%(opts.cluster,)
-	print >>sys.stderr, "Available clusters:"
-	for sec in config.sections():
-	    if sec == 'GENERAL':
-		continue
-	    print >>sys.stderr, " ",sec
+            print("Cluster \"%s\" not found.\n"%(opts.cluster,), file=sys.stderr)
+        print("Available clusters:", file=sys.stderr)
+        for sec in config.sections():
+            if sec == 'GENERAL':
+                continue
+            print(" ",sec, file=sys.stderr)
         sys.exit(1)
 
     url = config.get(opts.cluster,'URL')
@@ -54,19 +54,19 @@ gi.verify=False
 
 hi = None
 if opts.hist:
-    his = map(lambda h: h.get('id'),gi.histories.get_histories(name=opts.hist))
+    his = [h.get('id') for h in gi.histories.get_histories(name=opts.hist)]
     if len(his) > 1:
-	print >>sys.stderr, "Too many histories match: %s"%(opts.hist,)
-	sys.exit(1)
+        print("Too many histories match: %s"%(opts.hist,), file=sys.stderr)
+        sys.exit(1)
     elif len(his) == 1:
-	hi = his[0]
+        hi = his[0]
     else:
-        print >>sys.stderr, "No histories match: %s"%(opts.hist,)
-	sys.exit(1)
+        print("No histories match: %s"%(opts.hist,), file=sys.stderr)
+        sys.exit(1)
 
 for f in args:
     fname = os.path.split(f)[1]
-    print "Uploading: %s"%(fname,)
+    print("Uploading: %s"%(fname,))
     fid = None
     for di in gi.histories.show_matching_datasets(hi,fname):
         fid = di['id']
@@ -74,4 +74,4 @@ for f in args:
     if not fid:
         fid = gi.tools.upload_file(f,hi,file_name=fname,file_type=opts.format)['outputs'][0]['id']
     else:
-	print sys.stderr, "File %f already in history"%(fname,)
+        print(sys.stderr, "File %f already in history"%(fname,))

@@ -15,7 +15,7 @@ if [ -d cptacdcc/rclone ]; then
 fi
 PLATFORM=`cat PLATFORM`
 wget -q -O - http://cptac-cdap.georgetown.edu.s3-website-us-east-1.amazonaws.com/cptac-galaxy$VERSION.$PLATFORM.tgz | tar xvzf -
-if [ "$PLATFORM" = "python27"  ]; then
+if [ "$PLATFORM" = "python36"  ]; then
   sed -i "s%#\!bin/python$%#\!$PWD/bin/python%" *.py
 fi
 echo "CPTAC-Galaxy `cat VERSION` (`cat PLATFORM`)"

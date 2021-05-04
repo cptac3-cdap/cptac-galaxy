@@ -1,9 +1,9 @@
 #!bin/python
-import sys, os, os.path, time, datetime, urllib, glob, json, traceback
+import sys, os, os.path, time, datetime, urllib.request, urllib.parse, urllib.error, glob, json, traceback
 from operator import itemgetter
 from collections import defaultdict, Counter
-import ConfigParser
-from StringIO import StringIO
+import configparser
+from io import StringIO
 
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning, InsecurePlatformWarning, SNIMissingWarning
@@ -23,17 +23,17 @@ opts,args = parser.parse_args()
 if not opts.url:
 
     assert os.path.exists('.galaxy.ini')
-    config = ConfigParser.SafeConfigParser()
+    config = configparser.SafeConfigParser()
     config.read(['.galaxy.ini'])
 
     if not opts.cluster or not config.has_section(opts.cluster):
         if opts.cluster and not config.has_section(opts.cluster):
-	    print >>sys.stderr, "Cluster \"%s\" not found.\n"%(opts.cluster,)
-	print >>sys.stderr, "Available clusters:"
-	for sec in config.sections():
-	    if sec == 'GENERAL':
-		continue
-	    print >>sys.stderr, " ",sec
+            print("Cluster \"%s\" not found.\n"%(opts.cluster,), file=sys.stderr)
+        print("Available clusters:", file=sys.stderr)
+        for sec in config.sections():
+            if sec == 'GENERAL':
+                continue
+            print(" ",sec, file=sys.stderr)
         sys.exit(1)
 
     url = config.get(opts.cluster,'URL')
@@ -56,7 +56,7 @@ wfname2id = defaultdict(set)
 for wf in gi.workflows.get_workflows():
     wfname = wf['name']
     if ' (imported from ' in wfname:
-	wfname = wfname.split(' (imported from ',1)[0]
+        wfname = wfname.split(' (imported from ',1)[0]
         wfname2id[wfname].add(wf['id'])
     else:
         wfname2id[wfname].add(wf['id'])
@@ -65,18 +65,18 @@ for wffile in sorted(glob.glob(os.path.join(opts.directory,'*.ga'))):
     wf = json.loads(open(wffile).read())
     wfname = wf['name']
     if ' (imported from ' in wfname:
-	wfname = wfname.split(' (imported from ',1)[0]
+        wfname = wfname.split(' (imported from ',1)[0]
     if wfname in wfname2id:
-	for wfid in wfname2id[wfname]:
+        for wfid in wfname2id[wfname]:
             try:
-	        gi.workflows.delete_workflow(wfid)
-                print "Delete workflow: %s"%(wfname,)
+                gi.workflows.delete_workflow(wfid)
+                print("Delete workflow: %s"%(wfname,))
             except:
-                print "Delete workflow failed: %s"%(wf['name'],)
+                print("Delete workflow failed: %s"%(wf['name'],))
                 traceback.print_exc()
     try:
         wfi = gi.workflows.import_workflow_from_local_path(wffile)
-        print "Imported workflow: %s"%(wfi['name'],)
+        print("Imported workflow: %s"%(wfi['name'],))
     except:
-        print "Import workflow failed: %s"%(wffile,)
+        print("Import workflow failed: %s"%(wffile,))
         traceback.print_exc()

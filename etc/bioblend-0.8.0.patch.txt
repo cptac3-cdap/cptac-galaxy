@@ -1,0 +1,73 @@
+diff --exclude '*.pyc' -ru bioblend-0.8.0/cloudman/__init__.py bioblend/cloudman/__init__.py
+--- bioblend-0.8.0/cloudman/__init__.py	2016-08-11 13:38:01.000000000 -0400
++++ bioblend/cloudman/__init__.py	2017-02-13 11:28:13.000000000 -0500
+@@ -395,7 +395,10 @@
+             parse_result = urlparse(url)
+             # Make sure the URL scheme is defined (otherwise requests will not work)
+             if not parse_result.scheme:
+-                url = "http://" + url
++		if self.config.kwargs.get('use_ssl',False):
++                    url = "https://" + url
++		else:
++                    url = "http://" + url
+             # Parse the corrected URL again to extract the hostname
+             parse_result = urlparse(url)
+             super(CloudManInstance, self)._update_host_name(parse_result.hostname)
+@@ -721,7 +724,7 @@
+         before sending a response.
+         """
+         req_url = '/'.join([self.cloudman_url, 'root', url])
+-        r = requests.get(req_url, params=parameters, auth=("", self.password), timeout=timeout)
++        r = requests.get(req_url, params=parameters, auth=("ubuntu", self.password), timeout=timeout, verify=False)
+         try:
+             json = r.json()
+             return json
+diff --exclude '*.pyc' -ru bioblend-0.8.0/cloudman/launch.py bioblend/cloudman/launch.py
+--- bioblend-0.8.0/cloudman/launch.py	2016-08-11 13:38:01.000000000 -0400
++++ bioblend/cloudman/launch.py	2017-02-13 11:13:44.000000000 -0500
+@@ -11,7 +11,7 @@
+ from boto.ec2.regioninfo import RegionInfo
+ from boto.exception import EC2ResponseError, S3ResponseError
+ from boto.s3.connection import OrdinaryCallingFormat, S3Connection, SubdomainCallingFormat
+-from six.moves.http_client import HTTPConnection
++from six.moves.http_client import HTTPConnection, HTTPSConnection
+ from six.moves.urllib.parse import urlparse
+ 
+ import bioblend
+@@ -872,6 +872,12 @@
+             # CloudMan UI is pwd protected so include 401
+             if r.status in (200, 401):
+                 return True
++	    h = HTTPSConnection(p[1])
++            h.putrequest('HEAD', p[2])
++            h.endheaders()
++            r = h.getresponse()
++            if r.status in (200, 401):
++                return True
+         except Exception:
+             # No response or no good response
+             pass
+diff --exclude '*.pyc' -ru bioblend-0.8.0/galaxy/histories/__init__.py bioblend/galaxy/histories/__init__.py
+--- bioblend-0.8.0/galaxy/histories/__init__.py	2016-08-11 13:38:01.000000000 -0400
++++ bioblend/galaxy/histories/__init__.py	2017-02-11 16:06:52.000000000 -0500
+@@ -105,7 +105,7 @@
+                 params['types'] = types.join(",")
+         return Client._get(self, id=history_id, contents=contents, params=params)
+ 
+-    def delete_dataset(self, history_id, dataset_id):
++    def delete_dataset(self, history_id, dataset_id, purge=False):
+         """
+         Mark corresponding dataset as deleted.
+ 
+@@ -118,7 +118,10 @@
+         url = self.gi._make_url(self, history_id, contents=True)
+         # Append the dataset_id to the base history contents URL
+         url = '/'.join([url, dataset_id])
+-        Client._delete(self, url=url)
++	payload = {}
++        if purge:
++            payload['purge'] = purge
++        Client._delete(self, url=url, payload=payload)
+ 
+     def delete_dataset_collection(self, history_id, dataset_collection_id):
+         """

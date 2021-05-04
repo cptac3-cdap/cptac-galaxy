@@ -1,6 +1,6 @@
 #!/bin/env python
 
-from __future__ import print_function
+
 import sys, os, os.path, shutil, re, uuid, traceback
 
 from requests.exceptions import ConnectionError
@@ -72,7 +72,7 @@ def todict(lines):
     for l in lines.splitlines():
         if not l.strip():
             continue
-        key,value = map(str.strip,l.split(':',1))
+        key,value = list(map(str.strip,l.split(':',1)))
         d[key] = value
     return d
 
@@ -100,43 +100,43 @@ exprtype = study.experiment_type()
 exprtype = exprtypemap.get(exprtype,exprtype)
 
 if exprtype == 'iTRAQ':
-   labels = ['114','115','116','117']
-   labelmap = {'itraq_114': '114',
-               'itraq_115': '115',
-               'itraq_116': '116',
-               'itraq_117': '117'}
+    labels = ['114','115','116','117']
+    labelmap = {'itraq_114': '114',
+                'itraq_115': '115',
+                'itraq_116': '116',
+                'itraq_117': '117'}
 elif exprtype == 'TMT10':
-   labels = ['126','127N','127C','128N','128C','129N','129C','130N','130C','131']
-   labelmap = {'tmt_126':  '126',
-               'tmt_127n': '127N',
-               'tmt_127c': '127C',
-               'tmt_128n': '128N',
-               'tmt_128c': '128C',
-               'tmt_129n': '129N',
-               'tmt_129c': '129C',
-               'tmt_130n': '130N',
-               'tmt_130c': '130C',
-               'tmt_131':  '131',
-               }
+    labels = ['126','127N','127C','128N','128C','129N','129C','130N','130C','131']
+    labelmap = {'tmt_126':  '126',
+                'tmt_127n': '127N',
+                'tmt_127c': '127C',
+                'tmt_128n': '128N',
+                'tmt_128c': '128C',
+                'tmt_129n': '129N',
+                'tmt_129c': '129C',
+                'tmt_130n': '130N',
+                'tmt_130c': '130C',
+                'tmt_131':  '131',
+                }
 elif exprtype == 'TMT11':
-   labels = ['126C','127N','127C','128N','128C','129N','129C','130N','130C','131N','131C']
-   labelmap = {'tmt_126':  '126C',
-               'tmt_127n': '127N',
-               'tmt_127c': '127C',
-               'tmt_128n': '128N',
-               'tmt_128c': '128C',
-               'tmt_129n': '129N',
-               'tmt_129c': '129C',
-               'tmt_130n': '130N',
-               'tmt_130c': '130C',
-               'tmt_131':  '131N',
-               'tmt_131c': '131C'
-               }
+    labels = ['126C','127N','127C','128N','128C','129N','129C','130N','130C','131N','131C']
+    labelmap = {'tmt_126':  '126C',
+                'tmt_127n': '127N',
+                'tmt_127c': '127C',
+                'tmt_128n': '128N',
+                'tmt_128c': '128C',
+                'tmt_129n': '129N',
+                'tmt_129c': '129C',
+                'tmt_130n': '130N',
+                'tmt_130c': '130C',
+                'tmt_131':  '131N',
+                'tmt_131c': '131C'
+                }
 elif exprtype == "Label Free":
-   labels = ['000']
-   labelmap = {'Label Free': '000'}
+    labels = ['000']
+    labelmap = {'Label Free': '000'}
 else:
-   assert False, exprtype
+    assert False, exprtype
 
 analyte = study.analytical_fraction()
 analyte = analytemap.get(analyte,analyte)
@@ -179,10 +179,10 @@ headerrow.append("Fraction")
 print("\t".join(headerrow),file=wh1)
 for rf in study.rawfiles():
     if opts.userclone:
-        print("\t".join(map(lambda k: rf.get(k,""),['md5sum','sha1sum','file_size','file_location'])),file=wh)
+        print("\t".join([rf.get(k,"") for k in ['md5sum','sha1sum','file_size','file_location']]),file=wh)
     else:
         rf['_file_location'] = "/".join([rf['file_id'],rf['file_name']])
-        print("\t".join(map(lambda k: rf.get(k,""),['md5sum','sha1sum','file_size','_file_location'])),file=wh)
+        print("\t".join([rf.get(k,"") for k in ['md5sum','sha1sum','file_size','_file_location']]),file=wh)
     # if not opts.userclone:
     #     assert rf.get('file_location') in rf.get('signedUrl')
     #     line = ["files","url","%s.RAW.cksum"%(basename,)]
@@ -221,7 +221,7 @@ print("SPECIES=\"%s\""%(taxon,), file=wh)
 print("PROTEOME=\"%s\""%(analyte,), file=wh)
 print("QUANT=\"%s\""%(exprtype,), file=wh)
 if study.has_label_reagents():
-    print("BATCH=\"%s\""%(" ".join(map(lambda s: s.rsplit('.',1)[0],study.label_reagents()))), file=wh)
+    print("BATCH=\"%s\""%(" ".join([s.rsplit('.',1)[0] for s in study.label_reagents()])), file=wh)
 print("INST=\"%s\""%(instr), file=wh)
 wh.close()
 study.write_label_reagents("%s"%(workdir,))

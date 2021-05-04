@@ -1,5 +1,5 @@
 
-from __future__ import print_function
+
 
 import json, re, copy, csv, os, os.path, sys
 from collections import defaultdict
@@ -7,24 +7,24 @@ from collections import defaultdict
 import requests
 
 try:
-  from requests.packages.urllib3.exceptions import InsecureRequestWarning
-  requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+    from requests.packages.urllib3.exceptions import InsecureRequestWarning
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 except ImportError:
-  pass
+    pass
 
 try:
-  from requests.packages.urllib3.exceptions import InsecurePlatformWarning
-  requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
+    from requests.packages.urllib3.exceptions import InsecurePlatformWarning
+    requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
 except ImportError:
-  pass
+    pass
 
 try:
-  from requests.packages.urllib3.exceptions import SNIMissingWarning
-  requests.packages.urllib3.disable_warnings(SNIMissingWarning)
+    from requests.packages.urllib3.exceptions import SNIMissingWarning
+    requests.packages.urllib3.disable_warnings(SNIMissingWarning)
 except ImportError:
-  pass
+    pass
 
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 class PDC(object):
     resource = "pdc"
@@ -47,10 +47,10 @@ class PDC(object):
     def query(self,query):
 
         pdc_response = self.post(query)
-        
+
         # Set up a data structure for the query result
         decoded = dict()
-        
+
         # Check the results
         if pdc_response.ok:
             # Decode the response
@@ -71,7 +71,7 @@ class PDC(object):
         return decoded
 
     _study_query = '''
-    { study (%s, acceptDUA: true) { 
+    { study (%s, acceptDUA: true) {
     study_id study_submitter_id program_id project_id study_name
     program_name project_name disease_type primary_site
     analytical_fraction experiment_type cases_count aliquots_count
@@ -172,7 +172,7 @@ class PDC(object):
     { filesMetadata(file_id: "%(file_id)s", acceptDUA: true) {
     file_submitter_id file_name file_size md5sum plex_or_dataset_name
     analyte instrument file_location file_submitter_id fraction_number
-    experiment_type aliquots { aliquot_id aliquot_submitter_id 
+    experiment_type aliquots { aliquot_id aliquot_submitter_id
     sample_id sample_submitter_id
     } } }
     '''
@@ -203,7 +203,7 @@ class PDC(object):
      } }
     '''
     def _studyExperimentalDesign(self,study_id):
-         for r in self.query(self._studyExperimentalDesign_query%dict(study_id=study_id, label_aliquot_id="true"))['data']['studyExperimentalDesign']:
+        for r in self.query(self._studyExperimentalDesign_query%dict(study_id=study_id, label_aliquot_id="true"))['data']['studyExperimentalDesign']:
             yield r
 
 class PDCSTAGE(PDC):
@@ -277,7 +277,7 @@ class Study(object):
         self._has_label_reagents = False
         poollabels = set()
         nraw = len(self._rawfiles)
-        for k,v in pool.items():
+        for k,v in list(pool.items()):
             if v == nraw:
                 poollabels.add(k)
         if ratiodenom != None:
@@ -300,7 +300,7 @@ class Study(object):
         batchnames = set()
         for ansamp in ansamps:
             self._exprdes[ansamp] = {}
-            # How do we determine the label reagent? 
+            # How do we determine the label reagent?
             if labelbatch:
                 self._exprdes[ansamp]['labelreagent'] = labelbatch
                 self._has_label_reagents = True
@@ -352,7 +352,7 @@ class Study(object):
             print("WARNING: Labeling reagent batch correction file %s.txt not available."%(bn,),file=sys.stderr)
         for f in self._batches:
             fn = f['file_name']
-            data=urllib.urlopen(f['signedUrl']).read()
+            data=urllib.request.urlopen(f['signedUrl']).read()
             wh = open(os.path.join(directory,fn),'w')
             wh.write(data)
             wh.close()
@@ -363,7 +363,7 @@ class Study(object):
 
     def label_reagents(self):
         lr = set()
-        for d in self._exprdes.values():
+        for d in list(self._exprdes.values()):
             if d.get('labelreagent'):
                 lr.add(d.get('labelreagent'))
         return sorted(lr)
@@ -408,4 +408,3 @@ if __name__ == "__main__":
     except RuntimeError as e:
         print(e.args[0])
         sys.exit(1)
-        

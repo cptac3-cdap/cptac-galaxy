@@ -1,6 +1,6 @@
 #!bin/python
 
-import ConfigParser, os, os.path, sys
+import configparser, os, os.path, sys
 
 configfilename = '.galaxy'
 gensec = 'GENERAL'
@@ -9,7 +9,7 @@ gensec = 'GENERAL'
 # scriptdir = os.path.split(os.path.abspath(sys.argv[0]))[0]
 # assert os.cwd() == scriptdir, "Please run configure.py in the cptac-galaxy directory"
 
-config = ConfigParser.SafeConfigParser()
+config = configparser.SafeConfigParser()
 if os.path.exists('.galaxy.ini'):
     config.read(['.galaxy.ini'])
     assert config.has_section(gensec)
@@ -19,25 +19,25 @@ else:
 def getvalue(key,prompt,default=None,advanced=True,checkfile=False):
     origprompt = prompt
     if config.has_option(gensec,key):
-	default = config.get(gensec,key)
+        default = config.get(gensec,key)
     if default:
-	prompt += " [%s]"%(default,)
+        prompt += " [%s]"%(default,)
     if not advanced and default != None:
-	return default
+        return default
     prompt += ": "
-    value = raw_input(prompt).strip()
+    value = input(prompt).strip()
     if not value:
-	if default != None:
-	    return default
+        if default != None:
+            return default
         else:
-	    raise RuntimeError("%s required",origprompt)
+            raise RuntimeError("%s required",origprompt)
     if value == "-" and default:
-	return ""
+        return ""
     if value and checkfile:
-	if not  os.path.exists(value):
-	    raise RuntimeError("%s: %s does not exist"%(prompt,value))
-	else:
-	    value = os.path.abspath(value)
+        if not  os.path.exists(value):
+            raise RuntimeError("%s: %s does not exist"%(prompt,value))
+        else:
+            value = os.path.abspath(value)
     return value
 
 advanced = False
@@ -72,7 +72,7 @@ try:
     vpcconn = VPCConnection(aws_access_key,aws_secret_key)
 except:
     raise
-    print >>sys.stderr, "Cannot connect to AWS using provided access key/secret key."
+    print("Cannot connect to AWS using provided access key/secret key.", file=sys.stderr)
     sys.exit(1)
 
 if aws_keyname:
@@ -82,10 +82,10 @@ if aws_keyname:
         aws_private_key_path = os.path.join(os.getcwd(),".aws",aws_keyname+".pem")
     awskp = ec2conn.get_key_pair(aws_keyname)
     if not awskp:
-        print >>sys.stderr, "Cannot find a AWS EC2 keypair with name %s."%(aws_keyname,)
+        print("Cannot find a AWS EC2 keypair with name %s."%(aws_keyname,), file=sys.stderr)
         sys.exit(1)
     if not os.path.exists(aws_private_key_path):
-	print >>sys.stderr, "Cannot find local copy of AWS EC2 private key: %s."%(aws_private_key_path,)
+        print("Cannot find local copy of AWS EC2 private key: %s."%(aws_private_key_path,), file=sys.stderr)
         sys.exit(1)
 
 else:
@@ -93,38 +93,39 @@ else:
     aws_private_key_path = os.path.join(os.getcwd(),".aws",aws_keyname+".pem")
     awskp = ec2conn.get_key_pair(aws_keyname)
     if not awskp or not os.path.exists(aws_private_key_path):
-	attempt = 0
+        attempt = 0
         awskp = ec2conn.get_key_pair(aws_keyname)
-	while awskp:
-	    attempt += 1
-	    aws_keyname = "CPTAC-Galaxy-%d"%(attempt,)
-	    awskp = ec2conn.get_key_pair(aws_keyname)
+        while awskp:
+            attempt += 1
+            aws_keyname = "CPTAC-Galaxy-%d"%(attempt,)
+            awskp = ec2conn.get_key_pair(aws_keyname)
         aws_private_key_path = os.path.join(os.getcwd(),".aws",aws_keyname+".pem")
-	awskp = ec2conn.create_key_pair(aws_keyname)
-	try:
-	    os.makedirs(".aws")
-	except OSError:
-	    pass
-	awskp.save(".aws")
-	aws_keypath = aws_private_key_path
+        awskp = ec2conn.create_key_pair(aws_keyname)
+        try:
+            os.makedirs(".aws")
+        except OSError:
+            pass
+        awskp.material = awskp.material.encode()
+        awskp.save(".aws")
+        aws_keypath = aws_private_key_path
 
 aws_az = ""
 if not aws_subnet:
     for vpc in vpcconn.get_all_vpcs():
-	if vpc.is_default:
+        if vpc.is_default:
             for sn in vpcconn.get_all_subnets():
-	        if sn.vpc_id == vpc.id:
-	            aws_subnet = sn.id
-	            aws_az = sn.availability_zone
-	            break
-	    if aws_subnet:
-		break
+                if sn.vpc_id == vpc.id:
+                    aws_subnet = sn.id
+                    aws_az = sn.availability_zone
+                    break
+            if aws_subnet:
+                break
 else:
     try:
         sn = vpcconn.get_all_subnets(subnet_ids=[aws_subnet])[0]
-	aws_az = sn.availability_zone
+        aws_az = sn.availability_zone
     except:
-	print >>sys.stderr, "Cannot find a AWS VPC subnet with id %s."%(aws_subnet,)
+        print("Cannot find a AWS VPC subnet with id %s."%(aws_subnet,), file=sys.stderr)
         sys.exit(1)
 
 config.set(gensec,'aws_access_key',aws_access_key)

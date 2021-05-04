@@ -1,0 +1,50 @@
+diff -u -r bioblend.bak/cloudman/__init__.py bioblend/cloudman/__init__.py
+--- bioblend.bak/cloudman/__init__.py	2021-04-30 14:45:50.673812800 -0400
++++ bioblend/cloudman/__init__.py	2021-04-30 14:49:04.879128759 -0400
+@@ -397,7 +397,10 @@
+             parse_result = urlparse(url)
+             # Make sure the URL scheme is defined (otherwise requests will not work)
+             if not parse_result.scheme:
+-                url = "http://" + url
++               if self.config.kwargs.get('use_ssl',False):
++                    url = "https://" + url
++               else:
++                    url = "http://" + url
+             # Parse the corrected URL again to extract the hostname
+             parse_result = urlparse(url)
+             super()._update_host_name(parse_result.hostname)
+@@ -725,7 +728,7 @@
+         if parameters is None:
+             parameters = {}
+         req_url = '/'.join((self.cloudman_url, 'root', url))
+-        r = requests.get(req_url, params=parameters, auth=("", self.password), timeout=timeout)
++        r = requests.get(req_url, params=parameters, auth=("ubuntu", self.password), timeout=timeout, verify=False)
+         try:
+             json = r.json()
+             return json
+diff -u -r bioblend.bak/cloudman/launch.py bioblend/cloudman/launch.py
+--- bioblend.bak/cloudman/launch.py	2021-04-30 14:45:50.673812800 -0400
++++ bioblend/cloudman/launch.py	2021-04-30 14:55:37.927911521 -0400
+@@ -3,7 +3,7 @@
+ """
+ import datetime
+ import socket
+-from http.client import HTTPConnection
++from http.client import HTTPConnection, HTTPSConnection
+ from urllib.parse import urlparse
+ 
+ import boto
+@@ -851,7 +851,12 @@
+         """
+         try:
+             p = urlparse(url)
+-            h = HTTPConnection(p[1])
++            if p[0] == 'http':
++                h = HTTPConnection(p[1])
++            elif p[0] == 'https':
++                h = HTTPSConnection(p[1])
++            else:
++                raise RuntimeError(f'Unexpected url scheme: {p[0]}')
+             h.putrequest('HEAD', p[2])
+             h.endheaders()
+             r = h.getresponse()

@@ -41,14 +41,14 @@ cfid = gi.tools.run_tool(hi,'data_manager_pulsar_nodes_shutdown',{})['outputs'][
 delay=15
 while True:
     ok = 0
-    print "Shutdown WinPulsar nodes:",
+    print("Shutdown WinPulsar nodes:", end=' ')
     di = gi.histories.show_dataset(hi,cfid)
-    print di['state']
+    print(di['state'])
     sys.stdout.flush()
     if di['state'] == 'ok':
         break
     time.sleep(delay)
-print "Shutdown WinPulsar nodes: done"
+print("Shutdown WinPulsar nodes: done")
 
 # shutdown the cloudman cluster...
 
@@ -61,25 +61,24 @@ except requests.exceptions.ReadTimeout:
 access_key = cm.get('aws_access_key')
 secret_key = cm.get('aws_secret_key')
 
-from awsresources import AWSResources 
+from awsresources import AWSResources
 aws = AWSResources(access_key,secret_key,cluster_name)
 
-print "Waiting for AWS cleanup..."
+print("Waiting for AWS cleanup...")
 maxwait = 5
 start = time.time()
 clean = True
 while aws.any_resources():
     if (time.time() - start) > 60*maxwait:
-	clean = False
-	break
-    print "Cluster: %s\n%s\n"%(cluster_name, aws)
+        clean = False
+        break
+    print("Cluster: %s\n%s\n"%(cluster_name, aws))
     time.sleep(15)
 
 if not clean:
-    print >>sys.stderr, "AWS cleanup not complete after %s minutes"%(maxwait,)
-    print >>sys.stderr, "Remaining resources:\n%s"%(aws,)
+    print("AWS cleanup not complete after %s minutes"%(maxwait,), file=sys.stderr)
+    print("Remaining resources:\n%s"%(aws,), file=sys.stderr)
 else:
-    print "AWS cleanup done."
+    print("AWS cleanup done.")
 
 cm.remove(cluster)
-
