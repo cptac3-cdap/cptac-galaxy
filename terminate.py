@@ -52,7 +52,7 @@ print("Shutdown WinPulsar nodes: done")
 
 # shutdown the cloudman cluster...
 
-cmi = CloudManInstance(url,cluster_password)
+cmi = CloudManInstance(url,cluster_password,authuser="ubuntu",verify=False)
 try:
     cmi.terminate(terminate_master_instance=True, delete_cluster=True)
 except requests.exceptions.ReadTimeout:

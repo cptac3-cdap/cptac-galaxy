@@ -57,7 +57,7 @@ class AWSResources(object):
         if config and config.has_section(cluster_name):
             password = config.get(cluster_name,'password')
             url = config.get(cluster_name,'url')
-            self.cmi = CloudManInstance(url,password)
+            self.cmi = CloudManInstance(url,password,authuser="ubuntu",verify=False)
             # print self.cmi.get_static_state()
         self.set_bucket()
         self.set_instances()
@@ -304,6 +304,12 @@ class AWSResources(object):
                 time.sleep(10)
                 counter += 1
             print("Checking for any remaining resources..."); sys.stdout.flush()
+        if self.cluster_name:
+            print("Removing from .galaxy.ini..."); sys.stdout.flush()
+            from clustermanager import ClusterManager
+            cm = ClusterManager()
+            if cm.has(self.cluster_name):
+                cm.remove(self.cluster_name)
         return (not self.any_resources())
 
     def __str__(self):

@@ -193,7 +193,7 @@ cluster.set('Type','Cloudman')
 cm.add(cluster)
 
 
-cmi = CloudManInstance(url,cluster_password)
+cmi = CloudManInstance(url,cluster_password,verify=False,authuser="ubuntu")
 while True:
     elapsed = int((datetime.datetime.now() - start).seconds)
     print("[%02d:%02d]"%(elapsed/60,elapsed%60), end=' ')
@@ -208,6 +208,7 @@ while True:
         if galaxy:
             print("Galaxy:",galaxy, end=' ')
     except Exception as e:
+        # traceback.print_exc()
         pass
     print()
     sys.stdout.flush()

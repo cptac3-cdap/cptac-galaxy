@@ -45,7 +45,7 @@ buildOptions = dict(packages = [], excludes = [], includes = [],
                     include_files = includes)
 
 setup(name='CPTAC-Galaxy',
-      version = open('VERSION').read(),
+      version = open('VERSION').read().strip(),
       description = '',
       options = dict(build_exe = buildOptions),
       executables = executables)

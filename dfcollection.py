@@ -4,6 +4,9 @@ import sys, os, os.path, urllib.request, urllib.parse, urllib.error, tempfile, s
 from collections import defaultdict
 from subprocess import Popen
 
+import ssl
+noverify = ssl._create_unverified_context()
+
 class DatafileCollection(object):
     scriptdirs = [ "cptacdcc",
                    os.path.join("..","lib","cptac3-cdap","cptac-dcc","cptacdcc") ]
@@ -187,14 +190,14 @@ class DatafileCollection(object):
         else:
 
             if cksumdata.split(':',1)[0] in ('http','https','ftp'):
-                h = urllib.request.urlopen(cksumdata)
+                h = urllib.request.urlopen(cksumdata,context=noverify)
                 if h.getcode() != 200:
                     RuntimeError("[%s] Can't retrieve URL %s"%(resource,cksumdata))
                 if not prefixpath and not fullpathfmt:
                     prefixpath = cksumdata[:-len('.cksum')]
 
             elif resource in ('portal','portalurl'):
-                h = urllib.request.urlopen('https://cptc-xfer.uis.georgetown.edu/publicData/'+cksumdata)
+                h = urllib.request.urlopen('https://cptc-xfer.uis.georgetown.edu/publicData/'+cksumdata,context=noverify)
                 if h.getcode() != 200:
                     RuntimeError("[%s] Can't retrieve CPTAC Data Portal path %s"%(resource,cksumdata))
                 if not prefixpath and not fullpathfmt:

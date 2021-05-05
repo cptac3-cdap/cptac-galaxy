@@ -2,7 +2,7 @@
 
 set -x
 VERSION=`cat VERSION`
-DIR=$PWD/dist
+DIR=${PWD}/dist
 TGZ=cptac-galaxy-$VERSION.python36.tgz
 TGZ1=cptac-galaxy-$VERSION.linux-x86_64.tgz
 LNK=$DIR/cptac-galaxy.python36.tgz
@@ -42,15 +42,15 @@ mv -f "$TGZ1" "$DIR/$TGZ1"
 # rm -f "$LNK2"
 # ln -s "$DIR/$TGZ2" $LNK2
 
-rm -f dist/cptac-galaxy-$VERSION
-( cd dist; md5sum cptac-galaxy-$VERSION.*.tgz > cptac-galaxy-$VERSION.md5 ; touch cptac-galaxy-$VERSION.txt )
+rm -f $DIR/cptac-galaxy-$VERSION
+( cd $DIR; md5sum cptac-galaxy-$VERSION.*.tgz > cptac-galaxy-$VERSION.md5 ; touch cptac-galaxy-$VERSION.txt )
 if [ "$1" ]; then 
   for comment in "$@"; do 
-    echo "* $comment" >> dist/cptac-galaxy-$VERSION.txt
+    echo "* $comment" >> $DIR/cptac-galaxy-$VERSION.txt
   done
 fi
-gh release create "CPTAC-Galaxy-$VERSION" dist/cptac-galaxy-$VERSION.*.tgz dist/cptac-galaxy-$VERSION.md5 -F dist/cptac-galaxy-$VERSION.txt
-( cd workflows; gh release create "CPTAC-Galaxy-$VERSION" -F dist/cptac-galaxy-$VERSION.txt )
+gh release create "CPTAC-Galaxy-$VERSION" $DIR/cptac-galaxy-$VERSION.*.tgz $DIR/cptac-galaxy-$VERSION.md5 -F $DIR/cptac-galaxy-$VERSION.txt
+( cd workflows; gh release create "CPTAC-Galaxy-$VERSION" -F $DIR/cptac-galaxy-$VERSION.txt )
 rclone copy $DIR/$TGZ1 cptac-s3:cptac-cdap.georgetown.edu
 rclone copy $DIR/$TGZ cptac-s3:cptac-cdap.georgetown.edu
 rclone copyto setup.linux-x86_64.sh cptac-s3:cptac-cdap.georgetown.edu/cptac-galaxy-setup.linux-x86_64.sh

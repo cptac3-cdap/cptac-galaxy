@@ -1,15 +1,8 @@
 #!bin/python
-import sys, os, os.path, time, datetime, urllib.request, urllib.parse, urllib.error, glob, tempfile, shutil, re, zipfile
+import sys, os, os.path, time, datetime, glob, tempfile, shutil, re, zipfile
 from operator import itemgetter
 from collections import defaultdict, Counter
 from io import StringIO
-
-import requests
-from requests.packages.urllib3.exceptions import InsecureRequestWarning, InsecurePlatformWarning, SNIMissingWarning
-
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
-requests.packages.urllib3.disable_warnings(SNIMissingWarning)
 
 scriptdir = os.path.split(os.path.abspath(sys.argv[0]))[0]
 
@@ -63,7 +56,7 @@ if not opts.url:
     apikey = cluster.get('APIKey')
     password = cluster.get('Password')
     from bioblend.cloudman import CloudManInstance
-    cmi = CloudManInstance(url,password)
+    cmi = CloudManInstance(url,password,authuser="ubuntu",verify=False)
 
 else:
 
@@ -93,15 +86,15 @@ for wf in gi.workflows.get_workflows():
     # print gi.workflows.show_workflow(wf['id'])
 if not opts.wf or opts.wf not in wfname2id:
     if opts.wf:
-        print("Workflow \"%s\" not found.\n"%(opts.wf,), file=sys.stderr)
-    print("Available workflows:", file=sys.stderr)
+        print("Workflow \"%s\" not found.\n"%(opts.wf,), file=sys.stderr, flush=True)
+    print("Available workflows:", file=sys.stderr, flush=True)
     for wf in sorted(wfname2id):
-        print(" ", wf, file=sys.stderr)
+        print(" ", wf, file=sys.stderr, flush=True)
     sys.exit(1)
 
 if opts.remote or opts.remote_jobname:
     if not cluster or cluster.get('Type') != 'Cloudman':
-        print("Remote execute only available on AWS Cloudman Galaxy clusters", file=sys.stderr)
+        print("Remote execute only available on AWS Cloudman Galaxy clusters", file=sys.stderr, flush=True)
         sys.exit(1)
     args = dict()
     uploads = []
@@ -151,7 +144,7 @@ hi = None
 if opts.hist:
     his = [h.get('id') for h in gi.histories.get_histories(name=opts.hist)]
     if len(his) > 1:
-        print("Too many histories match: %s"%(opts.hist,), file=sys.stderr)
+        print("Too many histories match: %s"%(opts.hist,), file=sys.stderr, flush=True)
         sys.exit(1)
     if len(his) == 1:
         hi = his[0]
@@ -278,8 +271,8 @@ def download(history,base):
                 while os.path.exists(dlpath+".%d"%i):
                     i += 1
                 dlpath += ".%d"%i
-            print("Downloading %s..."%(dlpath,), end=' ', file=sys.stderr)
-            gi.datasets.download_dataset(id,file_path=dlpath,use_default_filename=False,wait_for_completion=True)
+            print("Downloading %s..."%(dlpath,), end=' ', file=sys.stderr, flush=True)
+            gi.datasets.download_dataset(id,file_path=dlpath,use_default_filename=False)
             if name.endswith('.html'):
                 try:
                     zf = zipfile.ZipFile(dlpath)
@@ -293,9 +286,9 @@ def download(history,base):
                     shutil.rmtree(tmpdir)
                 except zipfile.BadZipfile:
                     pass
-            print("done.", file=sys.stderr)
+            print("done.", file=sys.stderr, flush=True)
             if os.path.getsize(dlpath) == 0:
-                print("WARNING: empty file %s"%(name,), file=sys.stderr)
+                print("WARNING: empty file %s"%(name,), file=sys.stderr, flush=True)
             gi.histories.update_dataset(history,id,visible=False)
             # print >>sys.stderr, "Marked %s hidden."%(name,)
         gi.histories.delete_dataset(history,id)
@@ -307,7 +300,7 @@ def download(history,base):
     return dict(running=running_time, start=create_time, finish=done_time)
 
 def getstatus(history,histname,url,items):
-    print("Status: %s (%s) [%s]"%(histname,url,datetime.datetime.now().ctime()), file=sys.stderr)
+    print("Status: %s (%s) [%s]"%(histname,url,datetime.datetime.now().ctime()), file=sys.stderr, flush=True)
     index = {}; nextindex = 1; wininprocess = set()
     basestatus = defaultdict(Counter)
     dsid2jobid = dict()
@@ -337,7 +330,7 @@ def getstatus(history,histname,url,items):
             if base not in index:
                 index[base] = nextindex
                 nextindex += 1
-            print(" % 3d."%(index[base],),"\t".join([base,"%10s"%extn,state]), file=sys.stderr)
+            print(" % 3d."%(index[base],),"\t".join([base,"%10s"%extn,state]), file=sys.stderr, flush=True)
         basestatus[base][state] += 1
     all = set(); running = set(); done = set(); error = set()
     for base,counts in list(basestatus.items()):
@@ -408,21 +401,21 @@ while True:
     assert(len(allbase) == (idle+running+error+done))
     waiting = nitems-len(allbase)-len(skipped)-len(downloaded)
     failed = set([t[0] for t in [t for t in list(retries.items()) if t[1] >= opts.max_retries]])
-    print("Workflows: Waiting %d, Idle %d, Running %d, Error %d, Complete %d, Downloaded %d, Skipped %d, Failed %d, Done %d, Total %d"%(waiting, idle, running, error, done, len(downloaded), len(skipped), len(failed), len(downloaded)+len(skipped),nitems), file=sys.stderr)
+    print("Workflows: Waiting %d, Idle %d, Running %d, Error %d, Complete %d, Downloaded %d, Skipped %d, Failed %d, Done %d, Total %d"%(waiting, idle, running, error, done, len(downloaded), len(skipped), len(failed), len(downloaded)+len(skipped),nitems), file=sys.stderr, flush=True)
     if cmi:
         st = getcmstatus(cmi)
-        print("Instances: " + ", ".join(["%s [%.0f%%]"%(i,st['nodes'][i]) for i in sorted(st['nodes'],key=nodekey)]), file=sys.stderr)
-        print("     Jobs: " + ", ".join([st.title() + " " + "+".join(["%s"%(jobcnt[pl][st],) for pl in ('local','slurm','pulsar')]) for st in ('running','queued')]), file=sys.stderr)
-        print("     Disk: %s/%s [%s]"%(st['disk_used'],st['disk_total'],st['disk_percent']), file=sys.stderr)
+        print("Instances: " + ", ".join(["%s [%.0f%%]"%(i,st['nodes'][i]) for i in sorted(st['nodes'],key=nodekey)]), file=sys.stderr, flush=True)
+        print("     Jobs: " + ", ".join([st.title() + " " + "+".join(["%s"%(jobcnt[pl][st],) for pl in ('local','slurm','pulsar')]) for st in ('running','queued')]), file=sys.stderr, flush=True)
+        print("     Disk: %s/%s [%s]"%(st['disk_used'],st['disk_total'],st['disk_percent']), file=sys.stderr, flush=True)
         disk_too_full = False
         if 0 < opts.min_disk < 1 and (100-float(st['disk_percent'].strip('%'))) < opts.min_disk*100.0:
             disk_too_full = True
         elif opts.min_disk >= 1 and (float(st['disk_total'].strip('G'))-float(st['disk_used'].strip('G'))) < opts.min_disk:
             disk_too_full = True
     else:
-        print("     Jobs: " + ", ".join([st.title() + " " + "+".join(["%s"%(jobcnt[pl][st],) for pl in ('local','slurm','pulsar')]) for st in ('running','queued')]), file=sys.stderr)
+        print("     Jobs: " + ", ".join([st.title() + " " + "+".join(["%s"%(jobcnt[pl][st],) for pl in ('local','slurm','pulsar')]) for st in ('running','queued')]), file=sys.stderr, flush=True)
         disk_too_full = False
-    print("", file=sys.stderr)
+    print("", file=sys.stderr, flush=True)
 
     # Look for an item yet to be executed...
     passes = 0
@@ -489,15 +482,15 @@ while True:
             for toolid,fid in inputfiles:
                 inputs[toolid] = dict(src='hda',id=fid)
             if opts.data:
-                print("Schedule %s on %s..."%(opts.wf,", ".join(filename)), end=' ', file=sys.stderr)
+                print("Schedule %s on %s..."%(opts.wf,", ".join(filename)), end=' ', file=sys.stderr, flush=True)
             else:
-                print("Schedule %s..."%(opts.wf,), end=' ', file=sys.stderr)
+                print("Schedule %s..."%(opts.wf,), end=' ', file=sys.stderr, flush=True)
             gi.workflows.invoke_workflow(wfname2id[opts.wf],inputs,params,history_id=hi)
-            print("done.", file=sys.stderr)
+            print("done.", file=sys.stderr, flush=True)
             # statistics[currentbase]['start'] = time.time()
             if True or opts.data:
 
-                print('Waiting for %s...'%", ".join(filename), end=' ', file=sys.stderr)
+                print('Waiting for %s...'%", ".join(filename), end=' ', file=sys.stderr, flush=True)
                 time.sleep(opts.sched_sleep)
                 while True:
                     count = 0
@@ -508,13 +501,13 @@ while True:
                             count += 1
                     if count >= len(filename):
                         break
-                    print(".", end=' ', file=sys.stderr)
+                    print(".", end=' ', file=sys.stderr, flush=True)
                     time.sleep(opts.sched_sleep)
-                print("done.\n", file=sys.stderr)
+                print("done.\n", file=sys.stderr, flush=True)
 
-                print('Sleeping...', end=' ', file=sys.stderr)
+                print('Sleeping...', end=' ', file=sys.stderr, flush=True)
                 time.sleep(opts.sleep)
-                print('awake.\n', file=sys.stderr)
+                print('awake.\n', file=sys.stderr, flush=True)
 
             currentitem += 1
             if currentitem >= nitems:
@@ -533,13 +526,13 @@ while True:
                     statistics[base]['running_hours'] = round(statistics[base]['running']/3600.0,2)
                     statistics[base]['idle'] = max(0.0,statistics[base]['elapsed'] - statistics[base]['running'])
                     statistics[base]['idle_hours'] = max(0.0,statistics[base]['elapsed_hours'] - statistics[base]['running_hours'])
-                    print("%(name)s: elapsed %(elapsed_hours).2f hrs, running %(running_hours).2f hrs, idle %(idle_hours).2f hrs, attempts %(attempts)d"%statistics[base], file=sys.stderr)
+                    print("%(name)s: elapsed %(elapsed_hours).2f hrs, running %(running_hours).2f hrs, idle %(idle_hours).2f hrs, attempts %(attempts)d"%statistics[base], file=sys.stderr, flush=True)
                 downloaded.add(base)
                 if base in retries:
                     del retries[base]
             if opts.max_download > 0 and (i+1) >= opts.max_download:
                 break
-        print("", file=sys.stderr)
+        print("", file=sys.stderr, flush=True)
         continue
 
     if error > len(failed):
@@ -548,15 +541,15 @@ while True:
                 continue
             retries[base] += 1
             if retries.get(base,-1) < opts.max_retries:
-                print("Removing workflow jobs due to error: %s"%(base,), file=sys.stderr)
+                print("Removing workflow jobs due to error: %s"%(base,), file=sys.stderr, flush=True)
                 # remove all files for this base from the history
                 remove(hi,base)
-        print("", file=sys.stderr)
+        print("", file=sys.stderr, flush=True)
         continue
 
-    print('Sleeping...', end=' ', file=sys.stderr)
+    print('Sleeping...', end=' ', file=sys.stderr, flush=True)
     time.sleep(opts.sleep)
-    print('awake.\n', file=sys.stderr)
+    print('awake.\n', file=sys.stderr, flush=True)
 
 
 if opts.terminate and opts.cluster:
@@ -571,8 +564,8 @@ if opts.terminate and opts.cluster:
 exitcode = 0
 for base in retries:
     if retries.get(base,-1) > 0:
-        print("Dataset %s failed %d times, analysis not complete."%(base,retries[base]), file=sys.stderr)
+        print("Dataset %s failed %d times, analysis not complete."%(base,retries[base]), file=sys.stderr, flush=True)
         exitcode = 1
 
-print("Done.", file=sys.stderr)
+print("Done.", file=sys.stderr, flush=True)
 sys.exit(exitcode)

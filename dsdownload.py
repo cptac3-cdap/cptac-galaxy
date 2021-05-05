@@ -86,7 +86,7 @@ for di in gi.histories.show_history(hi,contents=True,deleted=False,visible=True,
             i += 1
             filepath = "%s.%d"%(os.path.join(opts.directory,name),i)
         print("Downloading %s..."%(name,), end=' ', file=sys.stderr)
-        gi.datasets.download_dataset(id,file_path=filepath,use_default_filename=False,wait_for_completion=True)
+        gi.datasets.download_dataset(id,file_path=filepath,use_default_filename=False)
         if name.endswith('.html'):
             try:
                 zf = zipfile.ZipFile(filepath)
