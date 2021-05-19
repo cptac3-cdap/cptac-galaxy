@@ -177,7 +177,7 @@ class DatafileCollection(object):
             if not fullpathfmt and not prefixpath:
                 raise RuntimeError("Prefix path or full path format required for file-based cksum file.")
 
-            h = open(cksumdata)
+            h = open(cksumdata,'rb')
             if resource.startswith('dcc/'):
                 resource,username = resource.split('/')
             elif resource.startswith('rclone/'):
@@ -214,7 +214,7 @@ class DatafileCollection(object):
                 cksumdatafile = os.path.join(tmpdir,cksumdata.rsplit('/',1)[1])
                 if not os.path.exists(cksumdatafile):
                     raise RuntimeError("[%s] Can't retrieve S3 path %s"%(resource,cksumdata))
-                h = open(cksumdatafile)
+                h = open(cksumdatafile,'rb')
                 if not prefixpath and not fullpathfmt:
                     prefixpath = cksumdata[:-len('.cksum')]
 
@@ -230,14 +230,14 @@ class DatafileCollection(object):
                 cksumdatafile = os.path.join(tmpdir,cksumdata.rsplit('/',1)[1])
                 if not os.path.exists(cksumdatafile):
                     raise RuntimeError("[%s] Can't retrieve path %s:%s"%("rclone",remote,cksumdata))
-                h = open(cksumdatafile)
+                h = open(cksumdatafile,'rb')
                 if not prefixpath and not fullpathfmt:
                     prefixpath = cksumdata[:-len('.cksum')]
 
             elif resource in ('local','pdc','pdcdev'):
                 if not os.path.exists(cksumdata):
                     raise RuntimeError("[%s] Can't retrieve local path %s"%(resource,cksumdata))
-                h = open(cksumdata)
+                h = open(cksumdata,'rb')
                 if not prefixpath and not fullpathfmt:
                     prefixpath = cksumdata[:-len('.cksum')]
 
