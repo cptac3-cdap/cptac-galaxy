@@ -43,14 +43,15 @@ mv -f "$TGZ1" "$DIR/$TGZ1"
 # ln -s "$DIR/$TGZ2" $LNK2
 
 rm -f $DIR/cptac-galaxy-$VERSION
-( cd $DIR; md5sum cptac-galaxy-$VERSION.*.tgz > cptac-galaxy-$VERSION.md5 ; touch cptac-galaxy-$VERSION.txt )
+( cd $DIR; md5sum cptac-galaxy-$VERSION.*.tgz > cptac-galaxy-$VERSION.md5 ; touch cptac-galaxy-$VERSION.txt; touch cptac-galaxy-$VERSION.empty.txt )
 if [ "$1" ]; then 
   for comment in "$@"; do 
     echo "* $comment" >> $DIR/cptac-galaxy-$VERSION.txt
   done
 fi
-gh release create "CPTAC-Galaxy-$VERSION" $DIR/cptac-galaxy-$VERSION.*.tgz $DIR/cptac-galaxy-$VERSION.md5 -F $DIR/cptac-galaxy-$VERSION.txt
-( cd workflows; gh release create "CPTAC-Galaxy-$VERSION" -F $DIR/cptac-galaxy-$VERSION.txt )
+gh release create "CPTAC-Galaxy-$VERSION" $DIR/cptac-galaxy-$VERSION.*.tgz $DIR/cptac-galaxy-$VERSION.md5 -t "CPTAC-Galaxy-$VERSION" -F $DIR/cptac-galaxy-$VERSION.txt
+( cd workflows; gh release create "CPTAC-Galaxy-$VERSION" -t "CPTAC-Galaxy-$VERSION" -F $DIR/cptac-galaxy-$VERSION.empty.txt )
+( cd seqdb; gh release create "CPTAC-Galaxy-$VERSION" -t "CPTAC-Galaxy-$VERSION" -F $DIR/cptac-galaxy-$VERSION.empty.txt )
 rclone copy $DIR/$TGZ1 cptac-s3:cptac-cdap.georgetown.edu
 rclone copy $DIR/$TGZ cptac-s3:cptac-cdap.georgetown.edu
 rclone copyto setup.linux-x86_64.sh cptac-s3:cptac-cdap.georgetown.edu/cptac-galaxy-setup.linux-x86_64.sh
