@@ -99,6 +99,9 @@ if aws.any_resources():
 cluster_password = getpass.getpass()
 apikey = hashlib.md5((cluster_password+'\n').encode()).hexdigest()
 
+import yaml
+yaml.warnings({'YAMLLoadWarning': False})
+
 from bioblend.cloudman import CloudManConfig
 from bioblend.cloudman import CloudManInstance
 
