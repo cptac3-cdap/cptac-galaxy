@@ -30,7 +30,7 @@ SH="organize0.sh organize1.sh organize1all.sh update.sh dfcoll.sh build.sh build
 rm -f cptacdcc
 ln -s cptacdcc.python36/cptacdcc cptacdcc
 ( cd cptacdcc;  ./update.sh )
-tar --exclude "seqdb/.git" --exclude "workflows/.git" czhf "$DIR/$TGZ" $PY $TXT $CKSUM $SH $INI VERSION workflows seqdb data etc cptacdcc
+tar --exclude "seqdb/.git" --exclude "workflows/.git" -czhf "$DIR/$TGZ" $PY $TXT $CKSUM $SH $INI VERSION workflows seqdb data etc cptacdcc
 # cp setup.python36.sh $DIR/cptac-galaxy-setup.python36.sh
 # cp setup.linux-x86_64.sh $DIR/cptac-galaxy-setup.linux-x86_64.sh
 # rm -f $DIR/cptac-galaxy-setup.sh
