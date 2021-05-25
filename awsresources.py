@@ -116,8 +116,9 @@ class AWSResources(object):
 
     def set_bucket(self):
         for b in self.s3conn.get_all_buckets():
-            if b.get_key("%s.clusterName"%(self.cluster_name,)):
+            if self.s3conn.lookup(b) and b.get_key("%s.clusterName"%(self.cluster_name,)):
                 self.bucket = b.name
+                break
 
     def get_bucket(self):
         return self.bucket
