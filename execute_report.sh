@@ -65,6 +65,7 @@ WORK=`dirname "$PARAM"`
 MZID="$WORK/$BASE.mzIdentML.txt"
 SAMP="$WORK/$BASE.sample.txt"
 QCMT="$WORK/$BASE.qcmetrics.tsv"
+LABF="$WORK/$BASE.label.txt"
 
 shift
 if [ "$1" = "--" ]; then
@@ -87,9 +88,9 @@ if [ "$QUANT" = "" ]; then
     help "QUANT missing from parameter file $1"
 fi
 
-# if [ "$BATCH" = "" ]; then
-#     help "BATCH missing from parameter file $1"
-# fi
+if [ "$BATCH" = "" -a -f "$LABF" ]; then
+    BATCH=`basename "$LABF" .txt`
+fi
 
 if [ "$TARGETFDR" = "" ]; then
     TARGETFDR="1.0"
