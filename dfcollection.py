@@ -84,7 +84,7 @@ class DatafileCollection(object):
         close = False
         if isinstance(infile,str):
             infiledir = os.path.split(infile)[0]
-            infile = open(infile,'r')
+            infile = open(infile)
             close = True
 
         for l in infile:
@@ -277,7 +277,7 @@ Password = %s
                     time.sleep(10)
                 if proc.returncode != 0 or not os.path.exists(cksumdatafile):
                     raise RuntimeError("[%s] Can't retrieve CPTAC DCC path %s"%(resource,cksumdata))
-                h = open(cksumdatafile)
+                h = open(cksumdatafile,'rb')
                 if not prefixpath and not fullpathfmt:
                     prefixpath = cksumdata[:-len('.cksum')]
                 if credfile:
