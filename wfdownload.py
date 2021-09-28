@@ -48,7 +48,6 @@ else:
 
 from bioblend import ConnectionError
 from bioblend.galaxy import GalaxyInstance
-from bioblend.galaxy.dataset_collections import CollectionDescription, HistoryDatasetElement
 gi = GalaxyInstance(url=url,key=apikey)
 gi.verify=False
 
@@ -64,7 +63,7 @@ if not os.path.exists(opts.directory):
 for wfname in wfname2id:
     wffilename = 'Galaxy-Workflow-%s.ga'%(wfname.replace(' ','_').replace('+','_'),)
     try:
-        wfdict = gi.workflows.export_workflow_json(wfname2id[wfname])
+        wfdict = gi.workflows.export_workflow_dict(wfname2id[wfname])
     except ConnectionError:
         print("Cannot download workflow %s"%(wfname,), file=sys.stderr)
         continue

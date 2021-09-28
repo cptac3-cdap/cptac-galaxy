@@ -26,7 +26,6 @@ class DatafileCollection(object):
         if os.path.isfile(self.moduledir) or self.moduledir.endswith('.zip'):
             # Probably in a cx_Freeze setup...
             self.moduledir = os.path.split(self.moduledir)[0]
-            self.moduledir = os.path.split(self.moduledir)[0]
 
         found = False
         for sd in self.scriptdirs:
@@ -38,6 +37,7 @@ class DatafileCollection(object):
                     break
             if found:
                 break
+        assert found, "Can't find cptacportal script..."
         self.cptacportal = sp
         self.s3 = os.path.join(os.path.split(sp)[0],"rclone","s3.sh")
         self.rclone = os.path.join(os.path.split(sp)[0],"rclone","rclone.sh")

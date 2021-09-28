@@ -187,8 +187,9 @@ def getdone(history):
     all = set()
     for di in gi.histories.show_history(history,contents=True,deleted=False,visible=True,details=True):
         name,state = list(map(di.get,('name','state')))
+        file_size = gi.histories.show_dataset(hi,di.get('id')).get('file_size')
         base1,extn = DatafileCollection.dssplit(name)
-        if state != 'ok':
+        if state != 'ok' or file_size == 0:
             notdone.add(base1)
         all.add(base1)
     return (all-notdone)
@@ -197,8 +198,9 @@ def geterror(history):
     error = set()
     for di in gi.histories.show_history(history,contents=True,deleted=False,visible=True,details=True):
         name,state = list(map(di.get,('name','state')))
+        file_size = gi.histories.show_dataset(hi,di.get('id')).get('file_size')
         base1,extn = DatafileCollection.dssplit(name)
-        if state == 'error':
+        if state == 'error' or (state == 'ok' and file_size == 0):
             error.add(base1)
     return error
 
@@ -214,6 +216,7 @@ def download(history,base):
     jobmetrics = defaultdict(dict)
     for di in gi.histories.show_matching_datasets(history,re.compile("^%s[-.]"%(re.escape(base),))):
         id,name,state,visible,deleted = list(map(di.get,('id','name','state','visible','deleted')))
+        file_size = gi.histories.show_dataset(history,di.get('id')).get('file_size')
         prov = gi.histories.show_dataset_provenance(history,di.get('id'))
         if not deleted and prov['job_id'] not in jobmetrics:
             job = gi.jobs.show_job(prov['job_id'],full_details=True)
@@ -252,9 +255,10 @@ def download(history,base):
                         jobmetrics[job.get('id')]['runtime'] = (endtime-starttime).total_seconds()
 
         # print id,name,state,visible,deleted,jobmetrics[prov['job_id']]
-        assert(state == 'ok' or deleted or not visible)
+
+        assert(state == 'ok' or deleted or not visible or file_size == 0)
         assert(base in items)
-        if visible and not deleted and name not in uploaded:
+        if visible and not deleted and name not in uploaded and file_size > 0:
             base,extn = DatafileCollection.dssplit(name)
             if opts.data:
                 dlpath = items[base][minposition]['results']+'/'+name
@@ -307,6 +311,9 @@ def getstatus(history,histname,url,items):
     jobs = defaultdict(lambda: defaultdict(set))
     for di in gi.histories.show_history(history,contents=True,deleted=False,visible=True,details=True):
         dsid,name,state = list(map(di.get,('id','name','state')))
+        file_size = gi.histories.show_dataset(hi,di.get('id')).get('file_size')
+        if state == 'ok' and file_size == 0:
+            state == 'error'
         base,extn = DatafileCollection.dssplit(name)
         if not extn:
             continue
@@ -314,9 +321,9 @@ def getstatus(history,histname,url,items):
             continue
         if name in uploaded:
             continue
+        prov = gi.histories.show_dataset_provenance(history,dsid)
+        jobid,toolid = list(map(prov.get,('job_id','tool_id')))
         if state in ('queued','running'):
-            prov = gi.histories.show_dataset_provenance(history,dsid)
-            jobid,toolid = list(map(prov.get,('job_id','tool_id')))
             dsid2jobid[dsid] = jobid
             if toolid.endswith('_pulsar'):
                 jobs['pulsar'][state].add(jobid)
@@ -324,7 +331,7 @@ def getstatus(history,histname,url,items):
                 jobs['local'][state].add(jobid)
             else:
                 jobs['slurm'][state].add(jobid)
-        if state in ('new','queued','running') and extn in ('mgf','mzXML','mzML.gz','raw'):
+        if state in ('new','queued','running') and toolid.endswith('_pulsar'):
             wininprocess.add(base)
         if state in ('running','error',):
             if base not in index:

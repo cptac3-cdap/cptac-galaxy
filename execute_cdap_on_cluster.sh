@@ -168,6 +168,12 @@ if [ $DOMZML = 1 ]; then
   if [ `fgrep "Workflows:" mzml.log | tail -n 1 | fgrep ' Failed 0, ' | wc -l ` -eq 0 ]; then
     exit 1;
   fi
+  if [ `fgrep "Workflows:" mzml.log | tail -n 1 | fgrep ' Error 0, ' | wc -l ` -eq 0 ]; then
+    exit 1;
+  fi
+  if [ `fgrep "analysis not complete" mzml.log | wc -l` -ne 0 ]; then
+    exit 1;
+  fi
   if [ "`tail -n 1 mzml.log`" != "Done." ]; then
     exit 1;
   fi
