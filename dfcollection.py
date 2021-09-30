@@ -9,6 +9,7 @@ noverify = ssl._create_unverified_context()
 
 class DatafileCollection(object):
     scriptdirs = [ "cptacdcc",
+                   os.path.join(os.sep,"home","ubuntu","cptac-galaxy","cptacdcc"), # absolute path
                    os.path.join("..","lib","cptac3-cdap","cptac-dcc","cptacdcc") ]
     resources = ["portal","portalurl","url","dcc","dcctr","s3","local","rclone","pdc","pdcdev"]
 
@@ -29,7 +30,10 @@ class DatafileCollection(object):
 
         found = False
         for sd in self.scriptdirs:
-            sdfp = os.path.join(self.moduledir,sd)
+            if not sd.startswith(os.sep):
+                sdfp = os.path.join(self.moduledir,sd)
+            else:
+                sdfp = sd
             for extn in (".py",".sh",""):
                 sp = os.path.join(sdfp,"cptacportal"+extn)
                 if os.path.exists(sp):
@@ -37,6 +41,9 @@ class DatafileCollection(object):
                     break
             if found:
                 break
+        if not found:
+            print("moduledir = %s"%(self.moduledir,))
+            print("scriptdirs = %s"%(self.scriptdirs,))
         assert found, "Can't find cptacportal script..."
         self.cptacportal = sp
         self.s3 = os.path.join(os.path.split(sp)[0],"rclone","s3.sh")
