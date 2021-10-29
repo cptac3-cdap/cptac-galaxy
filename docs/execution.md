@@ -38,7 +38,7 @@ InProgress/     2.58 GB   2021-06-25 15:59:00   edwardna
 % mkdir Proteome
 % mkdir Phosphoproteome
 ```
-2. Create and edit the the study parameter file. For CPTAC, valid SPECIES values are "Human", "Human+Mouse" (for CompRef); valid PROTEOME values are "Proteome","Phosphoproteome","Acetylome","Glycoproteome","Ubiquitilome"; valid QUANT values are "iTRAQ", "TMT10", "TMT11"; and valid INST values are "Thermo Q-Exactive HCD" (for all high-accuracy precursor data-dependent acquisitions on Thermo instruments". Some parameters can be omitted for some analysis types. 
+2. Create and edit the the study parameter file. For CPTAC, valid SPECIES values are "Human", "Human+Mouse" (for CPTAC CompRef), "Mouse", "Rat"; valid PROTEOME values are "Proteome","Phosphoproteome","Acetylome","Glycoproteome","Ubiquitilome"; valid QUANT values are "Label-Free", "iTRAQ", "TMT6", "TMT10", "TMT11"; and valid INST values are "Thermo Q-Exactive HCD" (for all high-accuracy precursor data-dependent acquisitions on Thermo instruments. Some parameters can be omitted for some analysis types. For a starting template, see `$CPTAC_CDAP_ROOT/cptac-galaxy/template.params`. 
 ```
 % cd $CPTAC_CDAP_ROOT/ExampleStudy/Proteome
 % cat > ExampleStudy_Proteome.params
@@ -48,33 +48,55 @@ QUANT="TMT11"
 INST="Thermo Q-Exactive HCD"
 %
 ```
-3. Create the RAW spectral datafile manifest (depends on placement and data-layout of RAW files on the DCC). 
+3. Create the RAW spectral datafile manifest (depends on placement and data-layout of RAW files on the DCC). Other RAW spectral datafile sources are supported, including local files, public URLs, and AWS S3. A full description of these capabilities and the format of the maifest file can be found elsewhere.  
 ```
 % cd $CPTAC_CDAP_ROOT/ExampleStudy/Proteome
-% ../../cptac-galaxy/dfcoll.sh dcc/UUUUUU PGDAC/6f_non-ccRCC/TMT-DDA-MS | fgrep Proteome > ExampleStudy_Proteome.RAW.txt
+% ../../cptac-galaxy/dfcoll.sh dcc/UUUUUU PGDAC/... > ExampleStudy_Proteome.RAW.txt
 %
 ```
-4. Create the tab-separated value isotopic labeling batch correction file (see published studies for examples). Find the necesary values by searcing for the TMT reagent lot numbers at [Thermo Fisher](https://www.thermofisher.com/) and copying from the Certificate of Analysis PDF. For TMT11, two lot numbers are used (TMT10 + TMT11-131C). Note that the label names for TMT10 use 126 and 131, while the label names for TMT11 use 126C, 131N, 131C.  If the labels batch identifiers are not available, use the file `$CPTAC_CDAP_ROOT/cptac-galaxy/Identity_TMT_Label_Correction.txt`
+4. Create the tab-separated value isotopic labeling batch correction file (see published studies for examples). Find the necesary values by searcing for the TMT reagent lot numbers at [Thermo Fisher](https://www.thermofisher.com/) and copying from the Certificate of Analysis PDF. For TMT11, two lot numbers are used (TMT10 + TMT11-131C). Note that the label names for TMT10 use 126 and 131, while the label names for TMT11 use 126C, 131N, 131C.  If the labels batch identifiers are not available use `$CPTAC_CDAP_ROOT/cptac-galaxy/Identity_TMT_Label_Correction.txt` or for a starting template, use the file `$CPTAC_CDAP_ROOT/cptac-galaxy/template.labels.txt`
 ```
 % cd $CPTAC_CDAP_ROOT/ExampleStudy/Proteome
-% cat > ExampleStudy_Proteome.labels.txt
->VA296083_UJ279751      -2      -1      1       2
-126C    0.0     0.0     7.4     0.0
-127N    0.0     0.0     7.6     0.0
-127C    0.0     0.8     6.5     0.0
-128N    0.0     0.4     6.6     0.0
-128C    0.0     1.5     5.6     0.0
-129N    0.0     1.6     5.9     0.0
-129C    0.0     2.7     4.7     0.0
-130N    0.0     2.4     4.4     0.0
-130C    0.0     3.3     3.3     0.0
-131N    0.8     2.9     3.7     0.0
-131C    0.0     3.8     3.3     0.0
+% cp $CPTAC_CDAP_ROOT/cptac-galaxy/template.labels.txt ExampleStudy_Proteome.labels.txt
 %
 ```
-5. Create the tab-separated values experimental design (sample) file (see published studies for examples). Usually this requires checking the meta-data provided by the data-generators. Headers include: `FileNameRegEx`, `AnalyticalSample`, `LabelReagent`, `Ratios`, and the label names. Values in the LabelRegent column should match one of the batch correction names in the `ExampleStudy_Proteome.labels.txt` file. Label name headers should match the label names in the batch correction label names. Values in the Ratios column should be separated by commas, and use the label names from the batch correction file. 
+5. Create the tab-separated values experimental design (sample) file (see published studies for examples). Usually this requires checking the meta-data provided by the data-generators. Headers include: `FileNameRegEx`, `AnalyticalSample`, `LabelReagent`, `Ratios`, and the label names. Values in the LabelRegent column should match one of the batch correction names in the `ExampleStudy_Proteome.labels.txt` file. Label name headers should match the label names in the batch correction label names. Values in the Ratios column should be separated by commas, and use the label names from the batch correction file. For a starting template, use the file `$CPTAC_CDAP_ROOT/cptac-galaxy/template-tmt10.sample.txt` or  `$CPTAC_CDAP_ROOT/cptac-galaxy/template-tmt11.sample.txt`
 ```
 % cd $CPTAC_CDAP_ROOT/ExampleStudy/Proteome
-% touch ExampleStudy_Proteome.sample.txt
+% cp $CPTAC_CDAP_ROOT/cptac-galaxy/template-tmt11.sample.txt ExampleStudy_Proteome.sample.txt
 % 
 ```
+## Start a new CPTAC3 CDAP AWS cluster
+1. Launch the cluster
+```
+% cd $CPTAC_CDAP_ROOT
+% ./cptac-galaxy/launch CLUSTERNAME
+Password: AAAAAAAAA
+[00:04] Status: pending 
+[00:19] IP: 3.231.225.173 Status: booting 
+[01:06] IP: 3.231.225.173 Status: running 
+...
+Setting autoscale, max 2 workers
+Indexed sequence databases and auto-scale workers ready.
+Windows pulsar nodes will come online shortly.
+%
+```
+## Execute a mzML RAW file conversion Analysis
+1. Note that the `*.labels.txt` and `*.samples.txt` files are not required for a mzML RAW file conversion analysis.
+% cd $CPTAC_CDAP_ROOT
+% ./cptac-galaxy/cluster cdap -a mzML ./ExampleStudy/Proteome/ExampleStudy_Proteome.params
+[Fri Oct 29 20:40:27 UTC 2021] *** mzML Analysis ***
+[Fri Oct 29 20:40:27 UTC 2021] Workflow: Raw to mzML.gz
+[Fri Oct 29 20:42:27 UTC 2021] Waiting 175, Idle 0, Running 0, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
+^C
+```
+2. 
+% ./cptac-galaxy/cluster status
+[Fri Oct 29 20:40:27 UTC 2021] *** mzML Analysis ***
+[Fri Oct 29 20:40:27 UTC 2021] Workflow: Raw to mzML.gz
+[Fri Oct 29 20:42:27 UTC 2021] Waiting 175, Idle 0, Running 0, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
+[Fri Oct 29 20:43:27 UTC 2021] Waiting 174, Idle 0, Running 1, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
+^C
+% ./cptac-galaxy/cluster download ExampleStudy/Proteome
+
+
