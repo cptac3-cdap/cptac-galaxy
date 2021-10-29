@@ -35,26 +35,29 @@ InProgress/     2.58 GB   2021-06-25 15:59:00   edwardna
 % cd $CPTAC_CDAP_ROOT
 % mkdir TutorialStudy
 % cd TutorialStudy
-% mkdir Proteomics
-% mkdir Phosphoproteomics
+% mkdir Proteome
+% mkdir Phosphoproteome
 ```
 2. Create and edit the the study parameter file. For CPTAC, valid SPECIES values are "Human", "Human+Mouse" (for CompRef); valid PROTEOME values are "Proteome","Phosphoproteome","Acetylome","Glycoproteome","Ubiquitilome"; valid QUANT values are "iTRAQ", "TMT10", "TMT11"; and valid INST values are "Thermo Q-Exactive HCD" (for all high-accuracy precursor data-dependent acquisitions on Thermo instruments". Some parameters can be omitted for some analysis types. 
 ```
-% cd $CPTAC_CDAP_ROOT/ExampleStudy/Proteomics
-% cat > ExampleStudy_Proteomics.params
+% cd $CPTAC_CDAP_ROOT/ExampleStudy/Proteome
+% cat > ExampleStudy_Proteome.params
 SPECIES="Human"
 PROTEOME="Proteome"
 QUANT="TMT11"
 INST="Thermo Q-Exactive HCD"
+%
 ```
 3. Create the RAW spectral datafile manifest (depends on placement and data-layout of RAW files on the DCC). 
 ```
-% cd $CPTAC_CDAP_ROOT/ExampleStudy/Proteomics
-% ../../cptac-galaxy/dfcoll.sh dcc/UUUUUU PGDAC/6f_non-ccRCC/TMT-DDA-MS | fgrep Proteome > ExampleStudy_Proteomics.RAW.txt
+% cd $CPTAC_CDAP_ROOT/ExampleStudy/Proteome
+% ../../cptac-galaxy/dfcoll.sh dcc/UUUUUU PGDAC/6f_non-ccRCC/TMT-DDA-MS | fgrep Proteome > ExampleStudy_Proteome.RAW.txt
+%
 ```
-4. Create the tab-separated value isotopic labeling batch correction file (see published studies for examples). Find the necesary values by searcing for the TMT reagent lot numbers at [Thermo Fisher](https://www.thermofisher.com/) and copying from the Certificate of Analysis PDF. For TMT11, two lot numbers are used (TMT10 + TMT11-131C). Note that the label names for TMT10 use 126 and 131, while the label names for TMT11 use 126C, 131N, 131C.  If the labels batch identifiers are not available, 
+4. Create the tab-separated value isotopic labeling batch correction file (see published studies for examples). Find the necesary values by searcing for the TMT reagent lot numbers at [Thermo Fisher](https://www.thermofisher.com/) and copying from the Certificate of Analysis PDF. For TMT11, two lot numbers are used (TMT10 + TMT11-131C). Note that the label names for TMT10 use 126 and 131, while the label names for TMT11 use 126C, 131N, 131C.  If the labels batch identifiers are not available, use the file `$CPTAC_CDAP_ROOT/cptac-galaxy/Identity_TMT_Label_Correction.txt`
 ```
-% cat > ExampleStudy_Proteomics.labels.txt
+% cd $CPTAC_CDAP_ROOT/ExampleStudy/Proteome
+% cat > ExampleStudy_Proteome.labels.txt
 >VA296083_UJ279751      -2      -1      1       2
 126C    0.0     0.0     7.4     0.0
 127N    0.0     0.0     7.6     0.0
@@ -69,8 +72,9 @@ INST="Thermo Q-Exactive HCD"
 131C    0.0     3.8     3.3     0.0
 %
 ```
-5. Create the experimental design (sample) file (see published studies for examples). Usually this requires checking the meta-data provided by the data-generators. 
+5. Create the tab-separated values experimental design (sample) file (see published studies for examples). Usually this requires checking the meta-data provided by the data-generators. Headers include: `FileNameRegEx`, `AnalyticalSample`, `LabelReagent`, `Ratios`, and the label names. Values in the LabelRegent column should match one of the batch correction names in the `ExampleStudy_Proteome.labels.txt` file. Label name headers should match the label names in the batch correction label names. Values in the Ratios column should be separated by commas, and use the label names from the batch correction file. 
 ```
-% cat > ExampleStudy_Proteomics.sample.txt
-%
+% cd $CPTAC_CDAP_ROOT/ExampleStudy/Proteome
+% touch ExampleStudy_Proteome.sample.txt
+% 
 ```
