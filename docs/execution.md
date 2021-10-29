@@ -83,6 +83,7 @@ Windows pulsar nodes will come online shortly.
 ```
 ## Execute a mzML RAW file conversion Analysis
 1. Note that the `*.labels.txt` and `*.samples.txt` files are not required for a mzML RAW file conversion analysis.
+```
 % cd $CPTAC_CDAP_ROOT
 % ./cptac-galaxy/cluster cdap -a mzML ./ExampleStudy/Proteome/ExampleStudy_Proteome.params
 [Fri Oct 29 20:40:27 UTC 2021] *** mzML Analysis ***
@@ -91,12 +92,16 @@ Windows pulsar nodes will come online shortly.
 ^C
 ```
 2. 
+```
 % ./cptac-galaxy/cluster status
 [Fri Oct 29 20:40:27 UTC 2021] *** mzML Analysis ***
 [Fri Oct 29 20:40:27 UTC 2021] Workflow: Raw to mzML.gz
 [Fri Oct 29 20:42:27 UTC 2021] Waiting 175, Idle 0, Running 0, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
 [Fri Oct 29 20:43:27 UTC 2021] Waiting 174, Idle 0, Running 1, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
 ^C
+```
+3. 
+```
 % ./cptac-galaxy/cluster download ExampleStudy/Proteome
-
+```
 
