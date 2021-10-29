@@ -1,6 +1,6 @@
 
 # CPTAC3 CDAP Execution
-Note: These instructions presume a Linux-based x86_64 server, with these instructions developed on CentOS7, with sufficient disk-space to support the various working and result files. 
+Note: These instructions presume a Linux-based x86_64 machine, with these instructions developed on CentOS7, with sufficient disk-space to support the various working and result files. 
 
 ## Work directory setup
 1. Establish a working directory. Where necesary, we will specify this working directory as `$CPTAC_CDAP_ROOT`.
