@@ -8,7 +8,7 @@ Note: These instructions presume a Linux-based x86_64 server, with these instruc
 1. Establish a working directory. Where necesary, we will specify this working directory as `$CPTAC_CDAP_ROOT`.
 
 2. Download and unpack the CPTAC3 CDAP execution infrastructure.
-```
+   ```
 % cd $CPTAC_CDAP_ROOT
 % wget -O - -q http://cptac-cdap.georgetown.edu.s3-website-us-east-1.amazonaws.com/cptac-galaxy-setup.sh | sh
 ```
