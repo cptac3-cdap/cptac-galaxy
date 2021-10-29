@@ -66,6 +66,15 @@ INST="Thermo Q-Exactive HCD"
 % cp $CPTAC_CDAP_ROOT/cptac-galaxy/template-tmt11.sample.txt ExampleStudy_Proteome.sample.txt
 % 
 ```
+6. A completely setup study directory will have `*.params`, `*.RAW.txt`, `*.labels.txt`, and `*.sample.txt` files with a common prefix:
+```
+% ls -1
+ExampleStudy_Proteome.label.txt
+ExampleStudy_Proteome.params
+ExampleStudy_Proteome.RAW.txt
+ExampleStudy_Proteome.sample.txt
+```
+8. 
 ## Start a new CPTAC3 CDAP AWS cluster
 1. Launch the cluster
 ```
@@ -94,10 +103,13 @@ Windows pulsar nodes will come online shortly.
 2. 
 ```
 % ./cptac-galaxy/cluster status
-[Fri Oct 29 20:40:27 UTC 2021] *** mzML Analysis ***
-[Fri Oct 29 20:40:27 UTC 2021] Workflow: Raw to mzML.gz
-[Fri Oct 29 20:42:27 UTC 2021] Waiting 175, Idle 0, Running 0, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
-[Fri Oct 29 20:43:27 UTC 2021] Waiting 174, Idle 0, Running 1, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
+...
+[Fri Oct 29 20:50:27 UTC 2021] Waiting 168, Idle 0, Running 3, Error 0, Complete 4, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
+[Fri Oct 29 20:51:27 UTC 2021] Waiting 168, Idle 0, Running 3, Error 0, Complete 4, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
+[Fri Oct 29 20:52:27 UTC 2021] Waiting 167, Idle 0, Running 4, Error 0, Complete 4, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
+[Fri Oct 29 20:53:27 UTC 2021] Waiting 166, Idle 0, Running 4, Error 0, Complete 5, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
+[Fri Oct 29 20:54:27 UTC 2021] Waiting 165, Idle 0, Running 4, Error 0, Complete 6, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
+[Fri Oct 29 20:55:27 UTC 2021] Waiting 165, Idle 0, Running 4, Error 0, Complete 6, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
 ^C
 ```
 3. 
