@@ -74,7 +74,7 @@ ExampleStudy_Proteome.params
 ExampleStudy_Proteome.RAW.txt
 ExampleStudy_Proteome.sample.txt
 ```
-8. 
+
 ## Start a new CPTAC3 CDAP AWS cluster
 1. Launch the cluster
 ```
