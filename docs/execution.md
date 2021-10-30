@@ -38,7 +38,7 @@ InProgress/     2.58 GB   2021-06-25 15:59:00   edwardna
 % mkdir Proteome
 % mkdir Phosphoproteome
 ```
-2. Create and edit the the study parameter file. For CPTAC, valid SPECIES values are "Human", "Human+Mouse" (for CPTAC CompRef), "Mouse", "Rat"; valid PROTEOME values are "Proteome","Phosphoproteome","Acetylome","Glycoproteome","Ubiquitilome"; valid QUANT values are "Label-Free", "iTRAQ", "TMT6", "TMT10", "TMT11"; and valid INST values are "Thermo Q-Exactive HCD" (for all high-accuracy precursor data-dependent acquisitions on Thermo instruments. Some parameters can be omitted for some analysis types. For a starting template, see `$CPTAC_CDAP_ROOT/cptac-galaxy/template.params`. 
+2. Create and edit the the study parameter file. For CPTAC, valid SPECIES values are "Human", "Human+Mouse" (for CPTAC CompRef), "Mouse", "Rat"; valid PROTEOME values are "Proteome","Phosphoproteome","Acetylome","Glycoproteome","Ubiquitilome"; valid QUANT values are "Label-Free", "iTRAQ", "TMT6", "TMT10", "TMT11"; and valid INST values are "Thermo Q-Exactive HCD" (for all high-accuracy precursor data-dependent acquisitions on Thermo instruments). Some parameters can be omitted for some analysis types. For a starting template, see `$CPTAC_CDAP_ROOT/cptac-galaxy/template.params`. 
 ```
 % cd $CPTAC_CDAP_ROOT/ExampleStudy/Proteome
 % cat > ExampleStudy_Proteome.params
@@ -76,7 +76,7 @@ ExampleStudy_Proteome.sample.txt
 ```
 
 ## Start a new CPTAC3 CDAP AWS cluster
-1. Launch the cluster
+1. Launch the cluster. NOTE that only one cluster with a given name may be used per AWS account. 
 ```
 % cd $CPTAC_CDAP_ROOT
 % ./cptac-galaxy/launch CLUSTERNAME
@@ -91,29 +91,83 @@ Windows pulsar nodes will come online shortly.
 %
 ```
 ## Execute a mzML RAW file conversion Analysis
-1. Note that the `*.labels.txt` and `*.samples.txt` files are not required for a mzML RAW file conversion analysis.
+1. Note that the `*.labels.txt` and `*.samples.txt` files are not required for a mzML RAW file conversion analysis. Use the `cptac-galaxy/cluster` program to manage running batch jobs on the AWS cluster. The `cdap` cluster command starts a CDAP batch job. Use `<ctrl>-C` to escape from the status output. 
 ```
 % cd $CPTAC_CDAP_ROOT
 % ./cptac-galaxy/cluster cdap -a mzML ./ExampleStudy/Proteome/ExampleStudy_Proteome.params
-[Fri Oct 29 20:40:27 UTC 2021] *** mzML Analysis ***
-[Fri Oct 29 20:40:27 UTC 2021] Workflow: Raw to mzML.gz
-[Fri Oct 29 20:42:27 UTC 2021] Waiting 175, Idle 0, Running 0, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
+[Fri Oct 29 21:00:31 UTC 2021] *** mzML Analysis ***
+[Fri Oct 29 21:00:31 UTC 2021] Workflow: Raw to mzML.gz
+[Fri Oct 29 21:01:31 UTC 2021] Waiting 25, Idle 0, Running 0, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 25
 ^C
+%
 ```
-2. 
+2. The `status` cluster command can be used to get the current status of the job.
 ```
 % ./cptac-galaxy/cluster status
 ...
-[Fri Oct 29 20:50:27 UTC 2021] Waiting 168, Idle 0, Running 3, Error 0, Complete 4, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
-[Fri Oct 29 20:51:27 UTC 2021] Waiting 168, Idle 0, Running 3, Error 0, Complete 4, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
-[Fri Oct 29 20:52:27 UTC 2021] Waiting 167, Idle 0, Running 4, Error 0, Complete 4, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
-[Fri Oct 29 20:53:27 UTC 2021] Waiting 166, Idle 0, Running 4, Error 0, Complete 5, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
-[Fri Oct 29 20:54:27 UTC 2021] Waiting 165, Idle 0, Running 4, Error 0, Complete 6, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
-[Fri Oct 29 20:55:27 UTC 2021] Waiting 165, Idle 0, Running 4, Error 0, Complete 6, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 175
+[Fri Oct 29 21:01:31 UTC 2021] Waiting 10, Idle 0, Running 2, Error 0, Complete 13, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 25
+[Fri Oct 29 21:02:31 UTC 2021] Waiting 9, Idle 0, Running 2, Error 0, Complete 14, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 25
+[Fri Oct 29 21:03:31 UTC 2021] Waiting 8, Idle 0, Running 2, Error 0, Complete 15, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 25
+...
+[Fri Oct 29 21:16:31 UTC 2021] Waiting 0, Idle 0, Running 0, Error 0, Complete 0, Downloaded 25, Skipped 0, Failed 0, Done 25, Total 25
+[Fri Oct 29 21:16:31 UTC 2021] *** mzML Analysis Complete ***
+...
+[Fri Oct 29 21:16:49 UTC 2021] Done.
 ^C
+%
 ```
-3. 
+%
+3. The `download` cluster command will download the results of a CDAP job. Note that the download command uses rsync, so will only transfer new or changed files. 
 ```
 % ./cptac-galaxy/cluster download ExampleStudy/Proteome
+receiving incremental file list
+./
+mzML/
+...
+
+sent 537 bytes  received 4,158,906,123 bytes  26,405,756.57 bytes/sec
+total size is 4,157,736,288  speedup is 1.00
+% 
 ```
 
+## Shutdown a CPTAC3 CDAP AWS cluster
+1. Terminate the cluster
+```
+% cd $CPTAC_CDAP_ROOT
+% ./cptac-galaxy/terminate 
+Shutdown WinPulsar nodes: new
+Shutdown WinPulsar nodes: ok
+Shutdown WinPulsar nodes: done
+Waiting for AWS cleanup...
+Cluster: CLUSTERNAME
+Instances: master (3.231.225.173) [CPU:18%], winpulsar [CPU:0%]
+Other: volume, bucket, stack
+Uptime: 21:07:38
+
+Cluster: CLUSTERNAME
+Instances: master (3.231.225.173) [CPU:18%]
+Other: volume, bucket, stack
+Uptime: 21:07:55
+
+Cluster: CLUSTERNAME
+Instances: master (3.231.225.173) [CPU:18%]
+Uptime: 21:08:12
+
+Cluster: CLUSTERNAME
+Instances: master (3.231.225.173) [CPU:18%]
+Uptime: 21:08:30
+
+AWS cleanup done.
+%
+```
+2. The `awsresources` command will tell you what AWS resources started by the CPTAC3 CDAP infrastructure are currently running.
+```
+% ./cptac-galaxy/awsresources
+%
+```
+3. Use the name of the cluster to restrict the information to a specific cluster, and the --delete option to forcibly remove AWS resources associated with that cluster.
+```
+% ./cptac-galaxy/awsresources CLUSTERNAME
+% ./cptac-galaxy/awsresources CLUSTERNAME --delete
+%
+```
