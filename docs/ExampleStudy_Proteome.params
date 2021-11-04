@@ -1,0 +1,4 @@
+SPECIES="Human"
+PROTEOME="Proteome"
+QUANT="TMT11"
+INST="Thermo Q-Exactive HCD"

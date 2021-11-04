@@ -56,6 +56,6 @@ rclone copy $DIR/$TGZ1 cptac-s3:cptac-cdap.georgetown.edu
 rclone copy $DIR/$TGZ cptac-s3:cptac-cdap.georgetown.edu
 rclone copyto setup.linux-x86_64.sh cptac-s3:cptac-cdap.georgetown.edu/cptac-galaxy-setup.linux-x86_64.sh
 rclone copyto setup.python36.sh cptac-s3:cptac-cdap.georgetown.edu/cptac-galaxy-setup.python36.sh
-aws --profile cptac s3api put-object --bucket cptac-cdap.georgetown.edu --key "cptac-galaxy.setup.sh" --website-redirect-location "/cptac-galaxy-setup.linux-x86_64.sh"
+aws --profile cptac s3api put-object --bucket cptac-cdap.georgetown.edu --key "cptac-galaxy-setup.sh" --website-redirect-location "/cptac-galaxy-setup.linux-x86_64.sh"
 aws --profile cptac s3api put-object --bucket cptac-cdap.georgetown.edu --key "cptac-galaxy.python36.tgz" --website-redirect-location "/$TGZ"
 aws --profile cptac s3api put-object --bucket cptac-cdap.georgetown.edu --key "cptac-galaxy.linux-x86_64.tgz" --website-redirect-location "/$TGZ1"
