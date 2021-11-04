@@ -96,10 +96,10 @@ ExampleStudy_Proteome.sample.txt
 ```
 
 ## 3. Launch a new CPTAC3 CDAP Galaxy cluster on AWS
-1. Launch the cluster. NOTE that only one cluster with a given name may be used per AWS account. 
+1. Launch the cluster. Only one cluster with a given name may be used per AWS account. 
 ```
 % cd $CPTAC_CDAP_ROOT
-% ./cptac-galaxy/launch CLUSTERNAME
+% ./cptac-galaxy/launch CDAP
 Password: AAAAAAAAA
 [00:04] Status: pending 
 [00:19] IP: 3.231.225.173 Status: booting 
@@ -111,7 +111,7 @@ Windows pulsar nodes will come online shortly.
 %
 ```
 ## 4. Execute the CDAP Analysis
-1. Note that the `*.labels.txt` and `*.samples.txt` files are not required for a mzML RAW file conversion analysis. Use the `cptac-galaxy/cluster` program to manage running batch jobs on the AWS cluster. The `cdap` cluster command starts a CDAP batch job. Use `<ctrl>-C` to escape from the status output. 
+1. NUse the `cptac-galaxy/cluster` program to manage the execution of batch jobs on the AWS cluster. The `cdap` cluster command starts a CDAP batch job. Use `<ctrl>-C` to escape from the status output. 
 ```
 % cd $CPTAC_CDAP_ROOT
 % ./cptac-galaxy/cluster cdap -a mzML ./ExampleStudy/Proteome/ExampleStudy_Proteome.params
