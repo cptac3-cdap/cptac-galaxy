@@ -96,39 +96,75 @@ ExampleStudy_Proteome.sample.txt
 ```
 
 ## 3. Launch a new CPTAC3 CDAP Galaxy cluster on AWS
-1. Launch the cluster. Only one cluster with a given name may be used per AWS account. 
+1. Launch the cluster. Only one cluster with a given name may be used per AWS account. The cluster should be ready to go in 10-15 mins. 
 ```
 % cd $CPTAC_CDAP_ROOT
 % ./cptac-galaxy/launch CDAP
 Password: AAAAAAAAA
-[00:04] Status: pending 
-[00:19] IP: 3.231.225.173 Status: booting 
-[01:06] IP: 3.231.225.173 Status: running 
+[00:04] 
+[00:19] IP: XX.XX.XX.XX Status: pending 
+[00:34] IP: XX.XX.XX.XX Status: running 
+[01:05] IP: XX.XX.XX.XX 
+[02:05] IP: XX.XX.XX.XX PSS: Unstarted Galaxy: Unstarted 
+[05:08] IP: XX.XX.XX.XX PSS: Unstarted Galaxy: Starting 
+[05:53] IP: XX.XX.XX.XX PSS: Unstarted Galaxy: Running 
+[06:08] IP: XX.XX.XX.XX PSS: Running Galaxy: Running 
+[07:09] IP: XX.XX.XX.XX PSS: Running Galaxy: Starting 
+[07:24] IP: XX.XX.XX.XX PSS: Running Galaxy: Running 
+[10:40] IP: XX.XX.XX.XX PSS: Completed Galaxy: Running
+Disable ProFTPd for security reasons...
+Galaxy ready: https://XX.XX.XX.XX
+Imported workflow: ...
 ...
+Starting WinPulsar nodes...
+Uploading sequence databases...
+[02:49] URL: https://XX.XX.XX.XX SeqDB upload: ok(46) running(2) 
+[03:13] URL: https://XX.XX.XX.XX SeqDB upload: ok(48) 
+Starting sequence database indexing and other setup tasks...
+[04:13] URL: https://XX.XX.XX.XX Indexing: queued(22) running(2) Other: queued(1) 
+...
+[08:12] URL: https://XX.XX.XX.XX Indexing: ok(24) Other: ok(1) 
 Setting autoscale, max 2 workers
 Indexed sequence databases and auto-scale workers ready.
 Windows pulsar nodes will come online shortly.
 %
 ```
 ## 4. Execute the CDAP Analysis
-1. Use the `cptac-galaxy/cluster` program to manage the execution of batch jobs on the AWS cluster. The `cdap` cluster command starts a CDAP batch job. Use `<ctrl>-C` to escape the status output. 
+1. Use the `cptac-galaxy/cluster` program to manage the execution of batch jobs on the AWS cluster. The `cdap` cluster command starts a CDAP batch job. Use `<ctrl>-C` to escape the status output. More information about the `cptac-galaxy/cluster` command is [available](cluster.md). Note that multiple clusters and multiple jobs per cluster can be managed using the `cptac-galaxy/cluster` command, but the example analysis here assumes a single cluster and a single analysis. Note that the analysis may fail if the study parameter files are not formed correctly or because individual steps of the analysis fail. See [troubleshooting](troubleshooting.md) for information about how to recover from problems.
 ```
 % cd $CPTAC_CDAP_ROOT
 % ./cptac-galaxy/cluster cdap ./ExampleStudy/Proteome/ExampleStudy_Proteome.params
-
+[Thu Nov  4 19:44:53 UTC 2021] *** PSM Analysis ***
+[Thu Nov  4 19:44:53 UTC 2021] Workflow: CPTAC3-CDAP: MSGF+ TMT 11-plex (Thermo Q-Exactive HCD)
+[Thu Nov  4 19:45:53 UTC 2021] Waiting 18, Idle 0, Running 0, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 18
+[Thu Nov  4 19:46:53 UTC 2021] Waiting 17, Idle 0, Running 1, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 18
+[Thu Nov  4 19:47:53 UTC 2021] Waiting 16, Idle 0, Running 2, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 18
+[Thu Nov  4 19:48:53 UTC 2021] Waiting 16, Idle 0, Running 2, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 18
+[Thu Nov  4 19:49:53 UTC 2021] Waiting 15, Idle 1, Running 2, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 18
+[Thu Nov  4 19:50:53 UTC 2021] Waiting 14, Idle 1, Running 3, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 18
 ^C
 %
 ```
-2. The `status` cluster command can be used to get the current status of the job.
+2. The `status` cluster command can be used to get the current status of the job. Let the batch job run until the output from `status` indicates the analysis is complete. See [troubleshooting](troubleshooting.md) for information about how to recover from problems.
 ```
+% cd $CPTAC_CDAP_ROOT
 % ./cptac-galaxy/cluster status
 ...
 
 ^C
-%
+% ./cptac-galaxy/cluster status
 ```
 %
-3. The `download` cluster command will download the results of a CDAP job. Note that the download command uses rsync, so will only transfer new or changed files. 
+3. Log into the Galaxy instance using the Galaxy Account Email from above ZZZ@WWW.VVV and the password used to lauch the instance in step 1. The URL for accessing the Galaxy instance can either be taken from the output of launch above, or by using the `cptac-galaxy/clusters" command or the `list` cluster command, which shows running batch jobs. 
+```
+% ./cptac-galaxy/clusters
+CDAP: https://XX.XX.XX.XX
+% ./cptac-galaxy/cluster list                                                                  
+Cluster CDAP (https://XX.XX.XX.XX) job IDs:
+  ExampleStudy_Proteome (running)
+%
+```
+4 The `download` cluster command will download the results of a CDAP job. Note that the download command uses rsync, so will only transfer new or changed files. 
 ```
 % ./cptac-galaxy/cluster download ExampleStudy/Proteome
 
@@ -145,21 +181,21 @@ Shutdown WinPulsar nodes: ok
 Shutdown WinPulsar nodes: done
 Waiting for AWS cleanup...
 Cluster: CDAP
-Instances: master (3.231.225.173) [CPU:18%], winpulsar [CPU:0%]
+Instances: master (XX.XX.XX.XX) [CPU:18%], winpulsar [CPU:0%]
 Other: volume, bucket, stack
 Uptime: 21:07:38
 
 Cluster: CDAP
-Instances: master (3.231.225.173) [CPU:18%]
+Instances: master (XX.XX.XX.XX) [CPU:18%]
 Other: volume, bucket, stack
 Uptime: 21:07:55
 
 Cluster: CDAP
-Instances: master (3.231.225.173) [CPU:18%]
+Instances: master (XX.XX.XX.XX) [CPU:18%]
 Uptime: 21:08:12
 
 Cluster: CDAP
-Instances: master (3.231.225.173) [CPU:18%]
+Instances: master (XX.XX.XX.XX) [CPU:18%]
 Uptime: 21:08:30
 
 AWS cleanup done.
