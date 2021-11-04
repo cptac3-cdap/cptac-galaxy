@@ -45,6 +45,12 @@ Folder: /CDAP
 InProgress/     2.58 GB   2021-06-25 15:59:00   edwardna
 %
 ```
+5. Note that at any point, you can update the CPTAC3 CDAP infrastructure to the latest version using the update script.
+```
+% cd $CPTAC_CDAP_ROOT/cptac-galaxy
+% ./update.sh
+%
+```
 ## 2. Create a CPTAC Study working directory
 1. Create working directories for study `ExampleStudy` in `$CPTAC_CDAP_ROOT`.
 ```
