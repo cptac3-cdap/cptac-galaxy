@@ -1,2 +1,2 @@
-01CPTAC_ExampleStudy_Proteome	dcc/edwardna	CDAP/ExampleStudy/MS/01CPTAC_ExampleStudy_Proteome.cksum
-02CPTAC_ExampleStudy_Proteome	dcc/edwardna	CDAP/ExampleStudy/MS/02CPTAC_ExampleStudy_Proteome.cksum
+01CPTAC_ExampleStudy_Proteome	dcc/UUUUUU	CDAP/ExampleStudy/MS/01CPTAC_ExampleStudy_Proteome.cksum
+02CPTAC_ExampleStudy_Proteome	dcc/UUUUUU	CDAP/ExampleStudy/MS/02CPTAC_ExampleStudy_Proteome.cksum
