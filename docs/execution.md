@@ -111,13 +111,11 @@ Windows pulsar nodes will come online shortly.
 %
 ```
 ## 4. Execute the CDAP Analysis
-1. NUse the `cptac-galaxy/cluster` program to manage the execution of batch jobs on the AWS cluster. The `cdap` cluster command starts a CDAP batch job. Use `<ctrl>-C` to escape from the status output. 
+1. Use the `cptac-galaxy/cluster` program to manage the execution of batch jobs on the AWS cluster. The `cdap` cluster command starts a CDAP batch job. Use `<ctrl>-C` to escape the status output. 
 ```
 % cd $CPTAC_CDAP_ROOT
-% ./cptac-galaxy/cluster cdap -a mzML ./ExampleStudy/Proteome/ExampleStudy_Proteome.params
-[Fri Oct 29 21:00:31 UTC 2021] *** mzML Analysis ***
-[Fri Oct 29 21:00:31 UTC 2021] Workflow: Raw to mzML.gz
-[Fri Oct 29 21:01:31 UTC 2021] Waiting 25, Idle 0, Running 0, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 25
+% ./cptac-galaxy/cluster cdap ./ExampleStudy/Proteome/ExampleStudy_Proteome.params
+
 ^C
 %
 ```
@@ -125,14 +123,7 @@ Windows pulsar nodes will come online shortly.
 ```
 % ./cptac-galaxy/cluster status
 ...
-[Fri Oct 29 21:01:31 UTC 2021] Waiting 10, Idle 0, Running 2, Error 0, Complete 13, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 25
-[Fri Oct 29 21:02:31 UTC 2021] Waiting 9, Idle 0, Running 2, Error 0, Complete 14, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 25
-[Fri Oct 29 21:03:31 UTC 2021] Waiting 8, Idle 0, Running 2, Error 0, Complete 15, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 25
-...
-[Fri Oct 29 21:16:31 UTC 2021] Waiting 0, Idle 0, Running 0, Error 0, Complete 0, Downloaded 25, Skipped 0, Failed 0, Done 25, Total 25
-[Fri Oct 29 21:16:31 UTC 2021] *** mzML Analysis Complete ***
-...
-[Fri Oct 29 21:16:49 UTC 2021] Done.
+
 ^C
 %
 ```
@@ -140,18 +131,12 @@ Windows pulsar nodes will come online shortly.
 3. The `download` cluster command will download the results of a CDAP job. Note that the download command uses rsync, so will only transfer new or changed files. 
 ```
 % ./cptac-galaxy/cluster download ExampleStudy/Proteome
-receiving incremental file list
-./
-mzML/
-...
 
-sent 537 bytes  received 4,158,906,123 bytes  26,405,756.57 bytes/sec
-total size is 4,157,736,288  speedup is 1.00
 % 
 ```
 
 ## 5. Terminate the CPTAC3 CDAP Galaxy cluster
-1. Terminate the cluster
+1. Terminate the cluster using the `cptac-galaxy/terminate` command. 
 ```
 % cd $CPTAC_CDAP_ROOT
 % ./cptac-galaxy/terminate 
@@ -159,35 +144,35 @@ Shutdown WinPulsar nodes: new
 Shutdown WinPulsar nodes: ok
 Shutdown WinPulsar nodes: done
 Waiting for AWS cleanup...
-Cluster: CLUSTERNAME
+Cluster: CDAP
 Instances: master (3.231.225.173) [CPU:18%], winpulsar [CPU:0%]
 Other: volume, bucket, stack
 Uptime: 21:07:38
 
-Cluster: CLUSTERNAME
+Cluster: CDAP
 Instances: master (3.231.225.173) [CPU:18%]
 Other: volume, bucket, stack
 Uptime: 21:07:55
 
-Cluster: CLUSTERNAME
+Cluster: CDAP
 Instances: master (3.231.225.173) [CPU:18%]
 Uptime: 21:08:12
 
-Cluster: CLUSTERNAME
+Cluster: CDAP
 Instances: master (3.231.225.173) [CPU:18%]
 Uptime: 21:08:30
 
 AWS cleanup done.
 %
 ```
-2. The `awsresources` command will tell you what AWS resources started by the CPTAC3 CDAP infrastructure are currently running.
+2. The `cptac-galaxy/awsresources` command will tell you what AWS resources started by the CPTAC3 CDAP infrastructure are currently running.
 ```
 % ./cptac-galaxy/awsresources
 %
 ```
 3. Use the name of the cluster to restrict the information to a specific cluster, and the --delete option to forcibly remove AWS resources associated with that cluster.
 ```
-% ./cptac-galaxy/awsresources CLUSTERNAME
-% ./cptac-galaxy/awsresources CLUSTERNAME --delete
+% ./cptac-galaxy/awsresources CDAP
+% ./cptac-galaxy/awsresources CDAP --delete
 %
 ```
