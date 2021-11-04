@@ -1,8 +1,21 @@
 
 # CPTAC3 CDAP Execution
-Note: These instructions presume a Linux-based x86_64 machine, with these instructions developed on CentOS7, with sufficient disk-space to support the various working and result files. 
 
-## Work directory setup
+Documentation of the steps to run a CPTAC3 CDAP analysis of a CPTAC3 study. Presumes access to the CPTAC private portal (CPTAC Data Exchange Sandbox), contact cptac.dcc.help@esacinc.com for an account if entitled to access this data. Most of the instructions, however, are generic, with only the location of the RAW spectral datafiles requiring private portal access.
+
+Note: These instructions presume a Linux-based x86_64 machine with sufficient disk-space to support the various working and result files. 
+
+The basic steps are:
+
+1. [Establish a CPTAC3 CDAP working directory](step1)
+2. [Create a CPTAC Study working directory](step2)
+3. [Launch a new CPTAC3 CDAP Galaxy cluster on AWS](step3)
+4. [Execute the CDAP Analysis](step4)
+5. [Terminate the CPTAC3 CDAP Galaxy cluster](step5)
+
+Detailed steps are provided below.
+
+## 1. Establish a CPTAC3 CDAP working directory
 1. Establish a working directory. Where necesary, we will specify this working directory as `$CPTAC_CDAP_ROOT`.
 2. Download and unpack the CPTAC3 CDAP execution infrastructure.
 ```
@@ -19,7 +32,7 @@ Galaxy Account Email: ZZZ@WWW.VVV
 CPTAC DCC Username (Optional): UUUUUU
 CPTAC DCC Password: PPPPPPPP
 ```
-4. Configure the CPTAC DCC command-line scripts in `$CPTAC_CDAP_ROOT/cptac-galaxy/cptacdcc`.
+4. Configure the CPTAC DCC command-line scripts in `$CPTAC_CDAP_ROOT/cptac-galaxy/cptacdcc`. Contact the CPTAC DCC to get login details if necessary.
 ```
 % cat > cptac-galaxy/cptacdcc/cptacdcc-local.ini
 [Portal]
