@@ -10,10 +10,10 @@ A demonstration dataset ("ExampleStudy") has been created for the purpose of thi
 The basic steps are:
 
 1. [Establish a CPTAC3 CDAP working directory](#1-establish-a-cptac3-cdap-working-directory)
-2. [Create a CPTAC Study working directory](step2)
-3. [Launch a new CPTAC3 CDAP Galaxy cluster on AWS](step3)
-4. [Execute the CDAP Analysis](step4)
-5. [Terminate the CPTAC3 CDAP Galaxy cluster](step5)
+2. [Create a CPTAC Study working directory](#2-create-a-cptac-study-working-directory)
+3. [Launch a new CPTAC3 CDAP Galaxy cluster on AWS](#3-launch-a-new-cptac3-cdap-galaxy-cluster-on-aws)
+4. [Execute the CDAP Analysis](#4-execute-the-cdap-analysis)
+5. [Terminate the CPTAC3 CDAP Galaxy cluster](#5-terminate-the-cptac3-cdap-galaxy-cluster)
 
 Detailed steps are provided below.
 
