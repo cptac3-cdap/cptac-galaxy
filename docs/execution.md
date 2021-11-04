@@ -3,11 +3,13 @@
 
 Documentation of the steps to run a CPTAC3 CDAP analysis of a CPTAC3 study. Presumes access to the CPTAC private portal (CPTAC Data Exchange Sandbox), contact cptac.dcc.help@esacinc.com for an account if entitled to access this data. Most of the instructions, however, are generic, with only the location of the RAW spectral datafiles requiring private portal access.
 
-Note: These instructions presume a Linux-based x86_64 machine with sufficient disk-space to support the various working and result files. 
+These instructions presume a Linux-based x86_64 machine with sufficient disk-space to support the various working and result files. 
+
+A demonstration dataset ("ExampleStudy") has been created for the purpose of this documentation.
 
 The basic steps are:
 
-1. [Establish a CPTAC3 CDAP working directory](step1)
+1. [Establish a CPTAC3 CDAP working directory](1-establish-a-cptac3-cdap-working-directory)
 2. [Create a CPTAC Study working directory](step2)
 3. [Launch a new CPTAC3 CDAP Galaxy cluster on AWS](step3)
 4. [Execute the CDAP Analysis](step4)
@@ -42,7 +44,7 @@ Password = PPPPPPPP
 Folder: /CDAP
 InProgress/     2.58 GB   2021-06-25 15:59:00   edwardna
 ```
-## Setup a Study Directory
+## 2. Create a CPTAC Study working directory
 1. Create working directories for study `ExampleStudy` in `$CPTAC_CDAP_ROOT`.
 ```
 % cd $CPTAC_CDAP_ROOT
@@ -88,7 +90,7 @@ ExampleStudy_Proteome.RAW.txt
 ExampleStudy_Proteome.sample.txt
 ```
 
-## Start a new CPTAC3 CDAP AWS cluster
+## 3. Launch a new CPTAC3 CDAP Galaxy cluster on AWS
 1. Launch the cluster. NOTE that only one cluster with a given name may be used per AWS account. 
 ```
 % cd $CPTAC_CDAP_ROOT
@@ -103,7 +105,7 @@ Indexed sequence databases and auto-scale workers ready.
 Windows pulsar nodes will come online shortly.
 %
 ```
-## Execute a mzML RAW file conversion Analysis
+## 4. Execute the CDAP Analysis
 1. Note that the `*.labels.txt` and `*.samples.txt` files are not required for a mzML RAW file conversion analysis. Use the `cptac-galaxy/cluster` program to manage running batch jobs on the AWS cluster. The `cdap` cluster command starts a CDAP batch job. Use `<ctrl>-C` to escape from the status output. 
 ```
 % cd $CPTAC_CDAP_ROOT
@@ -143,7 +145,7 @@ total size is 4,157,736,288  speedup is 1.00
 % 
 ```
 
-## Shutdown a CPTAC3 CDAP AWS cluster
+## 5. Terminate the CPTAC3 CDAP Galaxy cluster
 1. Terminate the cluster
 ```
 % cd $CPTAC_CDAP_ROOT
