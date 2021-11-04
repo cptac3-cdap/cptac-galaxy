@@ -156,7 +156,12 @@ Windows pulsar nodes will come online shortly.
 % cd $CPTAC_CDAP_ROOT
 % ./cptac-galaxy/cluster status
 ...
-
+[Thu Nov  4 20:54:53 UTC 2021] Waiting 4, Idle 0, Running 14, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 18
+[Thu Nov  4 20:55:53 UTC 2021] Waiting 4, Idle 0, Running 14, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 18
+[Thu Nov  4 20:56:53 UTC 2021] Waiting 3, Idle 1, Running 14, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 18
+[Thu Nov  4 20:57:53 UTC 2021] Waiting 3, Idle 1, Running 14, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 18
+[Thu Nov  4 20:58:53 UTC 2021] Waiting 2, Idle 1, Running 15, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 18
+[Thu Nov  4 20:59:53 UTC 2021] Waiting 2, Idle 1, Running 15, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 18
 ^C
 % ./cptac-galaxy/cluster status
 
