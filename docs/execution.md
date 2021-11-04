@@ -65,7 +65,7 @@ QUANT="TMT11"
 INST="Thermo Q-Exactive HCD"
 %
 ```
-3. Create the RAW spectral datafile manifest (depends on placement and data-layout of RAW files on the DCC). Other RAW spectral datafile sources are supported, including local files, public URLs, and AWS S3. A full description of these capabilities and the format of the maifest file can be found [elsewhere](manifest.md). `ExampleStudy_Proteome.RAW.txt` is available for [download](ExampleStudy_Proteome.RAW.txt). Replace `UUUUUU` with yourCPTAC private portal username. The `dfcoll.sh` script can automatically construct the manifest file given a CPTAC private portal directory. 
+3. Create the RAW spectral datafile manifest (depends on placement and data-layout of RAW files on the DCC). Other RAW spectral datafile sources are supported, including local files, public URLs, and AWS S3. A full description of these capabilities and the format of the maifest file can be found [elsewhere](manifest.md). `ExampleStudy_Proteome.RAW.txt` is available for [download](ExampleStudy_Proteome.RAW.txt). Replace `UUUUUU` with your CPTAC private portal username. The `dfcoll.sh` script can automatically construct the manifest file given a CPTAC private portal directory. 
 ```
 % cd $CPTAC_CDAP_ROOT/ExampleStudy/Proteome
 % ../../cptac-galaxy/dfcoll.sh dcc/UUUUUU CDAP/ExampleStudy/MS > ExampleStudy_Proteome.RAW.txt
@@ -80,13 +80,13 @@ INST="Thermo Q-Exactive HCD"
 % cp ../../cptac-galaxy/docs/ExampleStudy_Proteome.label.txt .
 % 
 ```
-5. Create the tab-separated values experimental design (sample) file (see published studies for examples). Usually this requires checking the meta-data provided by the data-generators. Headers include: `FileNameRegEx`, `AnalyticalSample`, `LabelReagent`, `Ratios`, and the label names. Values in the LabelRegent column should match one of the batch correction entry names in the `ExampleStudy_Proteome.labels.txt` file. Label name headers should match the label names in the batch correction label names. Values in the Ratios column should be separated by commas, and use the label names from the batch correction file. For a starting template, use the file [`template-tmt10.sample.txt`](../template-tmt10.sample.txt) or [`template-tmt11.sample.txt`](../template-tmt11.sample.txt). `ExampleStudy_Proteome.sample.txt` is available for [download][ExampleStudy_Proteome.sample.txt].
+5. Create the tab-separated values experimental design (sample) file (see published studies for examples). Usually this requires checking the meta-data provided by the data-generators. Headers include: `FileNameRegEx`, `AnalyticalSample`, `LabelReagent`, `Ratios`, and the label names. Values in the LabelRegent column should match one of the batch correction entry names in the `ExampleStudy_Proteome.label.txt` file. Label name headers should match the label names in the batch correction label names. Values in the Ratios column should be separated by commas, and use the label names from the batch correction file. For a starting template, use the file [`template-tmt10.sample.txt`](../template-tmt10.sample.txt) or [`template-tmt11.sample.txt`](../template-tmt11.sample.txt). `ExampleStudy_Proteome.sample.txt` is available for [download][ExampleStudy_Proteome.sample.txt].
 ```
 % cd $CPTAC_CDAP_ROOT/ExampleStudy/Proteome
 % cp ../../cptac-galaxy/docs/ExampleStudy_Proteome.sample.txt .
 % 
 ```
-6. A completely setup study directory will have `*.params`, `*.RAW.txt`, `*.labels.txt`, and `*.sample.txt` files with a common prefix:
+6. A completely setup study directory will have `*.params`, `*.RAW.txt`, `*.label.txt`, and `*.sample.txt` files with a common prefix:
 ```
 % ls
 ExampleStudy_Proteome.label.txt
