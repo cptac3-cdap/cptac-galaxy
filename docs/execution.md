@@ -19,7 +19,7 @@ Detailed steps are provided below.
 
 ## 1. Establish a CPTAC3 CDAP working directory
 1. Establish a working directory. Where necesary, we will specify this working directory as `$CPTAC_CDAP_ROOT`.
-2. Download and unpack the CPTAC3 CDAP execution infrastructure for x86_64 Linux. The intrastructure is developed and tested on CentOS 7. 
+2. Download and unpack the CPTAC3 CDAP execution infrastructure for x86_64 Linux. The intrastructure is developed and tested on CentOS7. 
 ```
 % cd $CPTAC_CDAP_ROOT
 % wget -O - -q http://cptac-cdap.georgetown.edu.s3-website-us-east-1.amazonaws.com/cptac-galaxy-setup.sh | sh
