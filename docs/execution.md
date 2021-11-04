@@ -19,12 +19,12 @@ Detailed steps are provided below.
 
 ## 1. Establish a CPTAC3 CDAP working directory
 1. Establish a working directory. Where necesary, we will specify this working directory as `$CPTAC_CDAP_ROOT`.
-2. Download and unpack the CPTAC3 CDAP execution infrastructure.
+2. Download and unpack the CPTAC3 CDAP execution infrastructure for x86_64 Linux. The intrastructure is developed and tested on CentOS 7. 
 ```
 % cd $CPTAC_CDAP_ROOT
 % wget -O - -q http://cptac-cdap.georgetown.edu.s3-website-us-east-1.amazonaws.com/cptac-galaxy-setup.sh | sh
 ```
-3. Configure the CPTAC3 CDAP execution infrastructure for AWS.
+3. Configure the CPTAC3 CDAP execution infrastructure for AWS. You will need AWS credientials and, if the RAW spectral data is at the CPTAC private portal, credentials for login. Use your normal email address for your Galaxy Account Email. 
 ```
 % cd $CPTAC_CDAP_ROOT/cptac-galaxy
 % ./configure
@@ -34,7 +34,7 @@ Galaxy Account Email: ZZZ@WWW.VVV
 CPTAC DCC Username (Optional): UUUUUU
 CPTAC DCC Password: PPPPPPPP
 ```
-4. Configure the CPTAC DCC command-line scripts in `$CPTAC_CDAP_ROOT/cptac-galaxy/cptacdcc`. Contact the CPTAC DCC to get login details if necessary.
+4. Configure the CPTAC DCC command-line scripts in `$CPTAC_CDAP_ROOT/cptac-galaxy/cptacdcc` if the spectral data is at the CPTAC private portal. 
 ```
 % cat > cptac-galaxy/cptacdcc/cptacdcc-local.ini
 [Portal]
@@ -43,17 +43,19 @@ Password = PPPPPPPP
 % cptac-galaxy/cptacdcc/cptacdcc CDAP
 Folder: /CDAP
 InProgress/     2.58 GB   2021-06-25 15:59:00   edwardna
+%
 ```
 ## 2. Create a CPTAC Study working directory
 1. Create working directories for study `ExampleStudy` in `$CPTAC_CDAP_ROOT`.
 ```
 % cd $CPTAC_CDAP_ROOT
-% mkdir TutorialStudy
-% cd TutorialStudy
+% mkdir ExampleStudy
+% cd ExampleStudy
 % mkdir Proteome
 % mkdir Phosphoproteome
+%
 ```
-2. Create and edit the the study parameter file. For CPTAC, valid SPECIES values are "Human", "Human+Mouse" (for CPTAC CompRef), "Mouse", "Rat"; valid PROTEOME values are "Proteome","Phosphoproteome","Acetylome","Glycoproteome","Ubiquitilome"; valid QUANT values are "Label-Free", "iTRAQ", "TMT6", "TMT10", "TMT11"; and valid INST values are "Thermo Q-Exactive HCD" (for all high-accuracy precursor data-dependent acquisitions on Thermo instruments). Some parameters can be omitted for some analysis types. For a starting template, see `$CPTAC_CDAP_ROOT/cptac-galaxy/template.params`. 
+2. Create and edit the the study parameter file. For CPTAC, valid SPECIES values are "Human", "Human+Mouse" (for CPTAC CompRef), "Mouse", "Rat"; valid PROTEOME values are "Proteome", "Phosphoproteome", "Acetylome", "Glycoproteome", and "Ubiquitilome"; valid QUANT values are "Label-Free", "iTRAQ", "TMT6", "TMT10", "TMT11"; and valid INST values are "Thermo Q-Exactive HCD" (for all high-accuracy precursor data-dependent acquisitions on Thermo instruments). Some parameters can be omitted for some analysis types. For a starting template, see [`../template.params`](../template.params). 
 ```
 % cd $CPTAC_CDAP_ROOT/ExampleStudy/Proteome
 % cat > ExampleStudy_Proteome.params
