@@ -29,7 +29,7 @@ cd cptac-galaxy
 . ./bin/activate
 ./bin/easy_install awscli
 ./bin/easy_install bioblend==0.9.0
-wget -q -O - http://edwardslab.bmcb.georgetown.edu/software/downloads/Galaxy/cptac-galaxy$VERSION.python36.tgz | tar zxvf -
+wget -q -O - http://cptac-cdap.georgetown.edu.s3-website-us-east-1.amazonaws.com/cptac-galaxy$VERSION.python36.tgz | tar zxvf -
 ( cd lib/python2.7/site-packages/bioblend-0.9.0-py2.7.egg; patch -p0 ) < etc/bioblend-0.9.0.patch.txt
 sed -i "s%#\!bin/python$%#\!$PWD/bin/python%" *.py
 echo "python36" > PLATFORM
