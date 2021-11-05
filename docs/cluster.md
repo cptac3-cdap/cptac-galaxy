@@ -10,7 +10,7 @@ The cluster cdap command initiates a CPTAC3 CDAP analysis based on the informati
 
 Usage: `cptac-galaxy/cluster [ <CLUSTERNAME> ] cdap [ -a <ANALYSIS> ] <PARAMSFILE>`
 
-where `<ANALYSIS>` is one of "mzML", "PSM", "Reports", "Complete"; and `<PARAMSFILE>` is the path to the `.params` file in a study directory. A Complete analysis consists of the PSM analysis followed by the Reports analysis. mzML RAW spectral file conversion is carried out by the mzML analysis and as part of the PSM analysis. The name of the batch jobs on the cluster is taken from the `.params` filename. 
+where `<ANALYSIS>` is one of "mzML", "PSM", "Reports", "Complete"; and `<PARAMSFILE>` is the path to the `.params` file in a study directory. A Complete analysis consists of the PSM analysis followed by the Reports analysis. The Complete analysis is carried out if no `-a` option is specified. mzML RAW spectral file conversion is carried out by the mzML analysis and as part of the PSM analysis. The name of the batch jobs on the cluster is taken from the `.params` filename. 
 
 Examples:
 * Run the complete CDAP analysis on the Proteome data from the ExampleStudy study.
