@@ -204,6 +204,7 @@ SummaryReports/
 mzIdentML/
 ...
 mzML/
+...
 
 sent 1,524 bytes  received 3,416,903,481 bytes  24,850,218.22 bytes/sec
 total size is 3,520,352,957  speedup is 1.03
