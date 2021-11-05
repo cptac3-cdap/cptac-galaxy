@@ -45,6 +45,12 @@ Folder: /CDAP
 InProgress/     2.58 GB   2021-06-25 15:59:00   edwardna
 %
 ```
+5. Note that at any point, you can update the CPTAC3 CDAP infrastructure to the latest version using the update script.
+```
+% cd $CPTAC_CDAP_ROOT/cptac-galaxy
+% ./update.sh
+%
+```
 ## 2. Create a CPTAC Study working directory
 1. Create working directories for study `ExampleStudy` in `$CPTAC_CDAP_ROOT`.
 ```
@@ -150,14 +156,33 @@ Windows pulsar nodes will come online shortly.
 % cd $CPTAC_CDAP_ROOT
 % ./cptac-galaxy/cluster status
 ...
-
+[Thu Nov  4 20:54:53 UTC 2021] Waiting 4, Idle 0, Running 14, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 18
+[Thu Nov  4 20:55:53 UTC 2021] Waiting 4, Idle 0, Running 14, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 18
+[Thu Nov  4 20:56:53 UTC 2021] Waiting 3, Idle 1, Running 14, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 18
+[Thu Nov  4 20:57:53 UTC 2021] Waiting 3, Idle 1, Running 14, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 18
+[Thu Nov  4 20:58:53 UTC 2021] Waiting 2, Idle 1, Running 15, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 18
+[Thu Nov  4 20:59:53 UTC 2021] Waiting 2, Idle 1, Running 15, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 18
 ^C
 % ./cptac-galaxy/cluster status
-
+...
+[Fri Nov  5 01:19:56 UTC 2021] Waiting 0, Idle 0, Running 1, Error 0, Complete 0, Downloaded 17, Skipped 0, Failed 0, Done 17, Total 18
+[Fri Nov  5 01:20:56 UTC 2021] Waiting 0, Idle 0, Running 0, Error 0, Complete 0, Downloaded 18, Skipped 0, Failed 0, Done 18, Total 18
+[Fri Nov  5 01:20:56 UTC 2021] *** PSM Analysis Complete ***
+...
+[Fri Nov  5 01:21:14 UTC 2021] *** Summary Reports ***
+[Fri Nov  5 01:21:14 UTC 2021] Workflow: Summary Reports: Human, TMT11, Whole Proteome
+[Fri Nov  5 01:22:14 UTC 2021] Waiting 1, Idle 0, Running 0, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 1
+[Fri Nov  5 01:23:14 UTC 2021] Waiting 0, Idle 1, Running 0, Error 0, Complete 0, Downloaded 0, Skipped 0, Failed 0, Done 0, Total 1
+^C
+% ./cptac-galaxy/cluster status
+...
+[Fri Nov  5 03:22:14 UTC 2021] Waiting 0, Idle 0, Running 0, Error 0, Complete 0, Downloaded 1, Skipped 0, Failed 0, Done 1, Total 1
+[Fri Nov  5 03:22:14 UTC 2021] *** Summary Reports Done ***
+[Fri Nov  5 03:22:15 UTC 2021] Done.
 ^C
 %
 ```
-3. Log into the Galaxy instance using the Galaxy Account Email from above ZZZ@WWW.VVV and the password used to lauch the instance in step 1. The URL for accessing the Galaxy instance can either be taken from the output of launch above, or by using the `cptac-galaxy/clusters" command or the `list` cluster command, which shows running batch jobs. 
+3. While the job is running, you can log into the Galaxy instance using the Galaxy Account Email ZZZ@WWW.VVV and the password used to lauch the instance in step 3.1. The URL for accessing the Galaxy instance can either be taken from the output of launch above, the `cptac-galaxy/clusters" command, or the `list` cluster command, which shows running batch jobs. 
 ```
 % ./cptac-galaxy/clusters
 CDAP: https://XX.XX.XX.XX
@@ -166,11 +191,34 @@ Cluster CDAP (https://XX.XX.XX.XX) job IDs:
   ExampleStudy_Proteome (running)
 %
 ```
-4 The `download` cluster command will download the results of a CDAP job. Note that the download command uses rsync, so will only transfer new or changed files. 
+4. The `download` cluster command will download the results of a CDAP job. Note that the download command uses rsync, so will only transfer new or changed files. 
 ```
 % ./cptac-galaxy/cluster download ExampleStudy/Proteome
+./cptac-galaxy/cluster download ExampleStudy/Proteome/                                       
+receiving incremental file list
+./
+PSM.tsv/
+...
+SummaryReports/
+...
+mzIdentML/
+...
+mzML/
+...
 
+sent 1,524 bytes  received 3,416,903,481 bytes  24,850,218.22 bytes/sec
+total size is 3,520,352,957  speedup is 1.03
 % 
+```
+5. Check the downloaded result files to make sure the files have not changed in transit.
+```
+% cd $CPTAC_CDAP_ROOT/ExampleStudy/Proteome
+% find mzML -name "*.cksum" -exec ../../cptac-galaxy/cptacdcc/cksum.sh -q {} \;
+% find PSM.tsv -name "*.cksum" -exec ../../cptac-galaxy/cptacdcc/cksum.sh -q {} \;
+% find mzIdentML -name "*.cksum" -exec ../../cptac-galaxy/cptacdcc/cksum.sh -q {} \;
+% cd SummaryReports
+%  ../../../cptac-galaxy/cptacdcc/cksum.sh -V -f ExampleStudy_Proteome.cksum .
+%
 ```
 
 ## 5. Terminate the CPTAC3 CDAP Galaxy cluster
