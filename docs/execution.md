@@ -182,7 +182,7 @@ Windows pulsar nodes will come online shortly.
 ^C
 %
 ```
-3. Log into the Galaxy instance using the Galaxy Account Email from above ZZZ@WWW.VVV and the password used to lauch the instance in step 1. The URL for accessing the Galaxy instance can either be taken from the output of launch above, or by using the `cptac-galaxy/clusters" command or the `list` cluster command, which shows running batch jobs. 
+3. While the job is running, you can log into the Galaxy instance using the Galaxy Account Email ZZZ@WWW.VVV and the password used to lauch the instance in step 3.1. The URL for accessing the Galaxy instance can either be taken from the output of launch above, the `cptac-galaxy/clusters" command, or the `list` cluster command, which shows running batch jobs. 
 ```
 % ./cptac-galaxy/clusters
 CDAP: https://XX.XX.XX.XX
