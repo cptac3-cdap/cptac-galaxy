@@ -169,15 +169,14 @@ class PDC(object):
             yield f
 
     _fileMetadata_query = '''
-    { filesMetadata(file_id: "%(file_id)s", acceptDUA: true) {
+    { fileMetadata(file_id: "%(file_id)s", acceptDUA: true) {
     file_submitter_id file_name file_size md5sum plex_or_dataset_name
     analyte instrument file_location file_submitter_id fraction_number
     experiment_type aliquots { aliquot_id aliquot_submitter_id
-    sample_id sample_submitter_id
-    } } }
+    sample_id sample_submitter_id } } }
     '''
     def _fileMetadata(self,file_id):
-        for r in self.query(self._fileMetadata_query%dict(file_id=file_id))['data']['filesMetadata']:
+        for r in self.query(self._fileMetadata_query%dict(file_id=file_id))['data']['fileMetadata']:
             return r
 
     _biospecimenPerStudy_query = '''
@@ -192,18 +191,34 @@ class PDC(object):
             yield r
 
     _studyExperimentalDesign_query = '''
-     { studyExperimentalDesign (study_id: "%(study_id)s", label_aliquot_id: "%(label_aliquot_id)s", acceptDUA: true) {
+     { studyExperimentalDesign (study_id: "%(study_id)s", acceptDUA: true) {
      study_run_metadata_id, study_run_metadata_submitter_id, study_id,
      study_submitter_id, analyte, acquisition_type, experiment_type,
      plex_dataset_name, experiment_number, number_of_fractions,
-     label_free, itraq_113, itraq_114, itraq_115, itraq_116, itraq_117,
-     itraq_118, itraq_119, itraq_121, tmt_126, tmt_127n, tmt_127c,
-     tmt_128n, tmt_128c, tmt_129n, tmt_129c, tmt_130n, tmt_130c, tmt_131,
-     tmt_131c
+     label_free{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}, 
+     itraq_113{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}, 
+     itraq_114{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}, 
+     itraq_115{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}, 
+     itraq_116{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}, 
+     itraq_117{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id},
+     itraq_118{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}, 
+     itraq_119{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}, 
+     itraq_121{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}, 
+     tmt_126{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}, 
+     tmt_127n{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}, 
+     tmt_127c{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id},
+     tmt_128n{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}, 
+     tmt_128c{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}, 
+     tmt_129n{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}, 
+     tmt_129c{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}, 
+     tmt_130n{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}, 
+     tmt_130c{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}, 
+     tmt_131{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id},
+     tmt_131c{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}
      } }
     '''
     def _studyExperimentalDesign(self,study_id):
-        for r in self.query(self._studyExperimentalDesign_query%dict(study_id=study_id, label_aliquot_id="true"))['data']['studyExperimentalDesign']:
+        for r in self.query(self._studyExperimentalDesign_query%dict(study_id=study_id))['data']['studyExperimentalDesign']:
             yield r
 
 class PDCSTAGE(PDC):
@@ -243,17 +258,16 @@ class Study(object):
         pool = defaultdict(int)
         for f in sorted(pdc.study_rawfiles(self._study_id,fnmatch=rawfnmatch),key=PDC.rawfilesortkey):
             for a in f['aliquots']:
-                if a.get('taxon'):
+                if a.get('taxon') and a.get('pool') != 'Yes':
                     taxon.add(a.get('taxon'))
                 if a.get('pool') == 'Yes':
                     aid = a.get('aliquot_id')
                     for k in f:
-                        if k.startswith('itraq_') or k.startswith('tmt_'):
-                            if f[k] == aid:
+                        if f[k] and (k.startswith('itraq_') or k.startswith('tmt_')):
+                            if f[k][0]['aliquot_id'] == aid:
                                 pool[k] += 1
                                 pool[(aid+":"+k)] += 1
-                            if f[k]:
-                                labels.add(k)
+                            labels.add(k)
                     pool[aid] += 1
             instr.add(f['instrument'])
             ansamps.add(f['plex_or_dataset_name'])

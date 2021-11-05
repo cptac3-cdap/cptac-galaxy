@@ -195,7 +195,7 @@ for rf in study.rawfiles():
     samples = dict()
     for tag in labelmap:
         lab = labelmap[tag]
-        asi = rf[tag].replace(" ","")
+        asi = rf[tag][0]['aliquot_run_metadata_id'].replace(" ","")
         if opts.denomaspool and tag == study.pool_label(ansamp):
             asi = "POOL"
         samples[lab] = asi

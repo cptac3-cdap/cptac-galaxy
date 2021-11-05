@@ -23,6 +23,7 @@ includes = [
     'seqdb',
     'workflows',
     'data',
+    'docs',
     'cptacdcc',
     'update.sh',
     'organize0.sh',
@@ -39,6 +40,11 @@ includes = [
     'pdcsetup.py',
     'PDC.py',
     'VERSION',
+    'template.label.txt',
+    'template.params',
+    'template-tmt10.sample.txt',
+    'template-tmt11.sample.txt',
+    'Identity_TMT_Label_Correction.txt'
 ]
 
 buildOptions = dict(packages = [], excludes = [], includes = [],
