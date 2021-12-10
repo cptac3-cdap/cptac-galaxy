@@ -70,7 +70,7 @@ else:
 
 from bioblend.galaxy import GalaxyInstance
 from bioblend.galaxy.dataset_collections import CollectionDescription, HistoryDatasetElement
-gi = GalaxyInstance(url=url,key=apikey)
+gi = GalaxyInstance(url=url+'/galaxy/',key=apikey)
 gi.verify=False
 gi.histories.set_max_get_retries(10)
 gi.tools.set_max_get_retries(10)

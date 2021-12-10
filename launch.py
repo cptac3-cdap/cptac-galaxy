@@ -114,6 +114,7 @@ image_id = default['aws_imageid']
 instance_type = general['aws_instance_type']
 
 extra = dict(
+        # no_start=True,
         use_ssl=True,
         master_prestart_commands=[
                 "wget -O - -q --no-check-certificate %s | /bin/sh"%(prestarturl,)
@@ -135,6 +136,7 @@ extra = dict(
           {
             "filesystem_templates": [
               {
+                "archive_md5": "256ea4fd4c211d40085f2af018fc6019",
                 "archive_url": "http://s3.amazonaws.com/%s/%s"%(default['cloudman_bucket'],default['galaxy_filesystem']),
                 "type": "volume",
                 "name": "galaxy",
@@ -204,6 +206,7 @@ while True:
     try:
         pss = None; galaxy = None;
         status = cmi._make_get_request("get_all_services_status",timeout=15)
+        # print(status)
         pss = status.get('PSS');
         galaxy = status.get('Galaxy')
         if pss:
@@ -223,12 +226,12 @@ print("Disable ProFTPd for security reasons...")
 params = dict(service_name='ProFTPd',to_be_started='False')
 cmi._make_get_request('manage_service',parameters=params)
 
-print("Galaxy ready: %s"%(url,))
+print("Galaxy ready: %s"%(url+'/galaxy/',))
 
 from bioblend.galaxy import GalaxyInstance
 import bioblend
 
-gi = GalaxyInstance(url=url,key=apikey)
+gi = GalaxyInstance(url=url+'/galaxy/',key=apikey)
 gi.verify=False
 gi.histories.set_max_get_retries(10)
 gi.histories.set_get_retry_delay(20)
@@ -291,7 +294,7 @@ if os.path.exists(seqdbini):
 while True:
     elapsed = int((datetime.datetime.now() - start).seconds)
     print("[%02d:%02d]"%(elapsed/60,elapsed%60), end=' ')
-    print("URL:",url,"SeqDB upload:", end=' ')
+    print("URL:",url+'/galaxy',"SeqDB upload:", end=' ')
     freq = defaultdict(int)
     for id in ids['SeqDB']:
         try:
@@ -337,7 +340,7 @@ except AssertionError:
 while True:
     elapsed = int((datetime.datetime.now() - start).seconds)
     print("[%02d:%02d]"%(elapsed/60,elapsed%60), end=' ')
-    print("URL:",url, end=' ')
+    print("URL:",url+'/galaxy', end=' ')
     totalok = 0
     print("Indexing:", end=' ')
     freq = defaultdict(int)

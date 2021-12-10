@@ -310,6 +310,7 @@ class AWSResources(object):
             from clustermanager import ClusterManager
             cm = ClusterManager()
             if cm.has(self.cluster_name):
+                print("Removing from .galaxy.ini..."); sys.stdout.flush()
                 cm.remove(self.cluster_name)
         return (not self.any_resources())
 

@@ -26,7 +26,7 @@ url = cluster.get('URL')
 apikey = cluster.get('APIKey')
 
 from bioblend.galaxy import GalaxyInstance
-gi = GalaxyInstance(url=url,key=apikey)
+gi = GalaxyInstance(url=url+'/galaxy/',key=apikey)
 gi.verify=False
 
 # Delete all histories so that the pulsar shutdown job can run...

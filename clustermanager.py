@@ -585,7 +585,7 @@ kill -9 `ps -ef | fgrep -w %(jobid)s | fgrep cptac-galaxy/execute | fgrep -v -w 
             self.ssh_session_end()
 
     def clear_workflow_instance(self,jobid,base):
-        gi = GalaxyInstance(url=self.get('url'),key=self.get('apikey'))
+        gi = GalaxyInstance(url=self.get('url')+'/galaxy/',key=self.get('apikey'))
         gi.verify=False
         history = None
         for h in gi.histories.get_histories(name=jobid):
@@ -608,7 +608,7 @@ kill -9 `ps -ef | fgrep -w %(jobid)s | fgrep cptac-galaxy/execute | fgrep -v -w 
         if isrunning:
             print("Stoping job: %s."%(jobid,))
             self.execute("sh %s/stop.sh"%(rdir,))
-        gi = GalaxyInstance(url=self.get('url'),key=self.get('apikey'))
+        gi = GalaxyInstance(url=self.get('url')+'/galaxy/',key=self.get('apikey'))
         gi.verify=False
         for h in gi.histories.get_histories(name=jobid):
             print("Removing Galaxy history %s."%(jobid,))
@@ -619,7 +619,7 @@ kill -9 `ps -ef | fgrep -w %(jobid)s | fgrep cptac-galaxy/execute | fgrep -v -w 
         self.ssh_session_end()
 
     def remove_job(self,jobid):
-        gi = GalaxyInstance(url=self.get('url'),key=self.get('apikey'))
+        gi = GalaxyInstance(url=self.get('url')+'/galaxy/',key=self.get('apikey'))
         gi.verify=False
         for h in gi.histories.get_histories(name=jobid):
             gi.histories.delete_history(h.get('id'), purge=True)
