@@ -1,6 +1,6 @@
 
 # Management of local (.galaxy.ini) cluster data
-import sys, os.path, tempfile, time, re, os
+import sys, os.path, tempfile, time, re, os, traceback
 import configparser
 import subprocess
 import lockfile
@@ -682,6 +682,8 @@ class ClusterManager(object):
             wh = open(self.iniFile,'w')
             config.write(wh)
             wh.close()
+        except:
+            traceback.print_exc()
         finally:
             lock.release()
 
