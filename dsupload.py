@@ -37,7 +37,7 @@ if not opts.url:
             print(" ",sec, file=sys.stderr)
         sys.exit(1)
 
-    url = config.get(opts.cluster,'URL')
+    url = config.get(opts.cluster,'URL') + '/galaxy/'
     apikey = config.get(opts.cluster,'APIKey')
 
 else:
