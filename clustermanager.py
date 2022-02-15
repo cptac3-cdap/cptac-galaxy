@@ -182,16 +182,16 @@ class Cluster(object):
         for line in self.execute("cat /home/ubuntu/cptac-galaxy/VERSION",output=True):
             versions['remote_cptac_galaxy'] = line.strip()
             break
-        for line in self.execute("cat /home/ubuntu/galaxy-tools/extratools/VERSION",output=True):
+        for line in self.execute("cat /home/ubuntu/galaxy-tools/tools/extratools/VERSION",output=True):
             versions['cptac_galaxy_tools'] = line.strip().split('-')[2]
             break
-        for line in self.execute("cat /home/ubuntu/galaxy-tools/extratools/lib/CPTAC-CDAP-Reports/VERSION.txt",output=True):
+        for line in self.execute("cat /home/ubuntu/galaxy-tools/tools/extratools/lib/CPTAC-CDAP-Reports/VERSION.txt",output=True):
             versions['cdap_reports'] = line.strip()
             break
-        for line in self.execute("/home/ubuntu/galaxy-tools/extratools/lib/cptac3-cdap/cptac-dcc/cptacdcc/cksum.sh --version",output=True):
+        for line in self.execute("/home/ubuntu/galaxy-tools/tools/extratools/lib/cptac3-cdap/cptac-dcc/cptacdcc/cksum.sh --version",output=True):
             versions['cptac_dcc_tools'] = line.strip().split()[2]
             break
-        for line in self.execute(r"/home/ubuntu/galaxy-tools/extratools/lib/cptac3-cdap/cptac-mzid/cptacmzid/version.sh",output=True):
+        for line in self.execute(r"/home/ubuntu/galaxy-tools/tools/extratools/lib/cptac3-cdap/cptac-mzid/cptacmzid/version.sh",output=True):
             versions['cptac_dcc_mzidentml'] = line.strip()
             break
         self.ssh_session_end()
@@ -218,7 +218,7 @@ class Cluster(object):
         sys.stdout.flush()
         for line in self.execute("sudo -H -u galaxy sed -i 's/CPTAC-GALAXY-[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*/CPTAC-GALAXY-%s/' /home/galaxy/.urls"%(tools_version,),output=True):
             pass # print line
-        for line in self.execute("( cd galaxy-tools/extratools; sh ./update.sh )",output=True):
+        for line in self.execute("( cd galaxy-tools/tools/extratools; sh ./update.sh )",output=True):
             pass # print line
         print("done.")
         sys.stdout.flush()
