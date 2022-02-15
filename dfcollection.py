@@ -9,6 +9,7 @@ noverify = ssl._create_unverified_context()
 
 class DatafileCollection(object):
     scriptdirs = [ "cptacdcc",
+                   os.path.join("cptac-galaxy","cptacdcc"),
                    os.path.join(os.sep,"home","ubuntu","cptac-galaxy","cptacdcc"), # absolute path
                    os.path.join("..","lib","cptac3-cdap","cptac-dcc","cptacdcc") ]
     resources = ["portal","portalurl","url","dcc","dcctr","s3","local","rclone","pdc","pdcdev"]

@@ -574,5 +574,6 @@ for base in retries:
         print("Dataset %s failed %d times, analysis not complete."%(base,retries[base]), file=sys.stderr, flush=True)
         exitcode = 1
 
-print("Done.", file=sys.stderr, flush=True)
+if exitcode == 0:
+    print("Done.", file=sys.stderr, flush=True)
 sys.exit(exitcode)

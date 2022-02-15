@@ -223,6 +223,9 @@ elif [ $DOPSM = 1 ]; then
   if [ `fgrep "Workflows:" psm.log | tail -n 1 | fgrep ' Failed 0, ' | wc -l ` -eq 0 ]; then
     exit 1;
   fi
+  if [ `fgrep "analysis not complete" psm.log | wc -l` -ne 0 ]; then
+    exit 1;
+  fi
   if [ "`tail -n 1 psm.log`" != "Done." ]; then
     exit 1;
   fi
@@ -286,6 +289,9 @@ if [ $DOREP = 1 ]; then
     sleep 60
   done
   if [ `fgrep "Workflows:" rep.log | tail -n 1 | fgrep ' Failed 0, ' | wc -l ` -eq 0 ]; then
+    exit 1;
+  fi
+  if [ `fgrep "analysis not complete" rep.log | wc -l` -ne 0 ]; then
     exit 1;
   fi
   if [ "`tail -n 1 rep.log`" != "Done." ]; then
