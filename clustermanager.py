@@ -172,6 +172,7 @@ class Cluster(object):
         self.execute("wget --no-check-certificate -q -O - https://edwardslab.bmcb.georgetown.edu/software/downloads/CPTAC-DCC/cptacdcc.linux-x86_64.tgz | tar xzf - -C cptac-galaxy")
         self.dcccredentials()
         self.execute("mkdir -p " + self.datadir)
+        self.copy(self.get('aws_keypath'),".ssh/id_rsa")
         self.ssh_session_end()
 
     def version(self):

@@ -223,6 +223,9 @@ elif [ $DOPSM = 1 ]; then
   if [ `fgrep "Workflows:" psm.log | tail -n 1 | fgrep ' Failed 0, ' | wc -l ` -eq 0 ]; then
     exit 1;
   fi
+  if [ `fgrep "Workflows:" psm.log | tail -n 1 | fgrep ' Error 0, ' | wc -l ` -eq 0 ]; then
+    exit 1;
+  fi
   if [ `fgrep "analysis not complete" psm.log | wc -l` -ne 0 ]; then
     exit 1;
   fi
@@ -291,6 +294,9 @@ if [ $DOREP = 1 ]; then
   if [ `fgrep "Workflows:" rep.log | tail -n 1 | fgrep ' Failed 0, ' | wc -l ` -eq 0 ]; then
     exit 1;
   fi
+  if [ `fgrep "Workflows:" rep.log | tail -n 1 | fgrep ' Error 0, ' | wc -l ` -eq 0 ]; then
+    exit 1;
+  fi
   if [ `fgrep "analysis not complete" rep.log | wc -l` -ne 0 ]; then
     exit 1;
   fi
@@ -303,6 +309,9 @@ if [ $DOREP = 1 ]; then
   cp $SAMPLE $RESULTS/SummaryReports
   for B in $BATCH; do
     cp $FILES/$B.txt $RESULTS/SummaryReports
+  done
+  for L in $FILES/*.label.txt; do
+    cp $L $RESULTS/SummaryReports
   done
   cp $FILES/${BASE}.qcmetrics.tsv $RESULTS/SummaryReports
   
