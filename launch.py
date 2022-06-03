@@ -197,8 +197,10 @@ cluster.set('ToolsURL',baseurl)
 cluster.set('Type','Cloudman')
 cm.add(cluster)
 
+cluster = cm.getcluster(cluster_name)
 
 cmi = CloudManInstance(url,cluster_password,verify=False,authuser="ubuntu")
+cloudman_seen = False
 while True:
     elapsed = int((datetime.datetime.now() - start).seconds)
     print("[%02d:%02d]"%(elapsed/60,elapsed%60), end=' ')
@@ -213,11 +215,18 @@ while True:
             print("PSS:",pss, end=' ')
         if galaxy:
             print("Galaxy:",galaxy, end=' ')
+        cloudman_seen = True
     except Exception as e:
         # traceback.print_exc()
         pass
     print()
     sys.stdout.flush()
+    if not cloudman_seen and elapsed > 10*60:
+        print("Force starting cloudman...")
+        cluster.ssh_session_start()
+        for line in cluster.execute('sudo /opt/cloudman/boot/cm_boot.py restart'):
+            print(line)
+        cluster.ssh_session_end()
     if pss == 'Completed' and galaxy == 'Running':
         break
     time.sleep(delay)

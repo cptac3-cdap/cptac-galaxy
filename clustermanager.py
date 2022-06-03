@@ -677,7 +677,10 @@ class ClusterManager(object):
         try:
             lock.acquire()
             config.read([self.iniFile])
-            name = cluster.get('name')
+            if isinstance(cluster,Cluster):
+                name = cluster.get('name')
+            else:
+                name = cluster
             assert name
             config.remove_section(name)
             wh = open(self.iniFile,'w')
@@ -687,6 +690,7 @@ class ClusterManager(object):
             traceback.print_exc()
         finally:
             lock.release()
+        self.load()
 
     def get(self,key,default=None):
         if self.config.has_option('GENERAL',key):

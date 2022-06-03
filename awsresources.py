@@ -227,6 +227,14 @@ class AWSResources(object):
         except (IndexError,EC2ResponseError):
             return False
 
+    def volume_attached(self):
+        if not self.volume_exists():
+            return False
+        try:
+            return not (self.ec2conn.get_all_volumes(self.volume)[0].status == 'in-use')
+        except (IndexError,EC2ResponseError):
+            return False
+
     def set_stacks(self):
         for stack in self.get_all_stacks():
             if stack.stack_status != 'DELETE_COMPLETE':
@@ -280,6 +288,11 @@ class AWSResources(object):
                 counter += 1
         print("Checking for volume..."); sys.stdout.flush()
         if self.volume_exists():
+            print("Waiting for volume to detatch..."); sys.stdout.flush()
+            counter = 0
+            while self.volume_attached() and counter < 12:
+                time.sleep(10)
+                counter += 1
             print("Deleting volume..."); sys.stdout.flush()
             self.ec2conn.delete_volume(volume_id=self.volume)
         print("Checking for stacks..."); sys.stdout.flush()
@@ -306,10 +319,9 @@ class AWSResources(object):
                 counter += 1
             print("Checking for any remaining resources..."); sys.stdout.flush()
         if self.cluster_name:
-            print("Removing from .galaxy.ini..."); sys.stdout.flush()
             from clustermanager import ClusterManager
             cm = ClusterManager()
-            if cm.has(self.cluster_name):
+            if cm.getcluster(self.cluster_name):
                 print("Removing from .galaxy.ini..."); sys.stdout.flush()
                 cm.remove(self.cluster_name)
         return (not self.any_resources())
@@ -412,6 +424,7 @@ if __name__ == '__main__':
         sys.argv.pop(1)
 
     if len(sys.argv) == 3 and sys.argv[2] == "--delete":
+        aws.config = None
         aws.set_cluster_name(sys.argv[1])
         print("Cluster:",sys.argv[1])
         sys.stdout.flush()
