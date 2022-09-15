@@ -44,6 +44,8 @@ includes = [
     'template.params',
     'template-tmt10.sample.txt',
     'template-tmt11.sample.txt',
+    'template-tmt16.sample.txt',
+    'template-tmt18.sample.txt',
     'Identity_TMT_Label_Correction.txt'
 ]
 

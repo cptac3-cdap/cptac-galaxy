@@ -19,7 +19,7 @@ Parameter file sets the follwing variables:
 
   SPECIES="{Human,Mouse,Rat,Human+Mouse}"
   PROTEOME="{Proteome,Phosphoproteome,Acetylome,Ubiquitylome,Glycoproteome}"
-  QUANT="{TMT6,TMT10,TMT11,iTRAQ,Label-Free}"
+  QUANT="{TMT6,TMT10,TMT11,TMT16,TMT18,iTRAQ,Label-Free}"
   INST="{Thermo Velos HCD,Thermo Q-Exactive HCD}" #Use Q-Exactive for all high-accuracy instruments
   VERSION="{1,2}" #Optional
 
@@ -97,7 +97,7 @@ case $PROTEOME in
 esac
 
 case $QUANT in
-  TMT6|TMT10|TMT11|iTRAQ|Label-Free) ;;
+  TMT6|TMT10|TMT11|TMT16|TMT18|iTRAQ|Label-Free) ;;
   *) help "Bad QUANT $QUANT in parameter file" ;;
 esac
 
@@ -115,6 +115,10 @@ if [ "$QUANT" = "TMT10" ]; then
   QUANT_FOR_PSM_WF="TMT 10-plex"
 elif [ "$QUANT" = "TMT11" ]; then
   QUANT_FOR_PSM_WF="TMT 11-plex"
+elif [ "$QUANT" = "TMT16" ]; then
+  QUANT_FOR_PSM_WF="TMT 16-plex"
+elif [ "$QUANT" = "TMT18" ]; then
+  QUANT_FOR_PSM_WF="TMT 18-plex"
 elif [ "$QUANT" = "TMT6" ]; then
   QUANT_FOR_PSM_WF="TMT 6-plex"
 elif [ "$QUANT" = "iTRAQ" ]; then

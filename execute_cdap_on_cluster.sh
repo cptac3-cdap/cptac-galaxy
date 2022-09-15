@@ -22,7 +22,7 @@ Parameter file sets the follwing variables:
 
   SPECIES="{Human,Mouse,Rat,Human+Mouse}"
   PROTEOME="{Proteome,Phosphoproteome,Acetylome,Glycoproteome,Ubiquitylome}"
-  QUANT="{TMT6,TMT10,TMT11,iTRAQ,Label-Free}"
+  QUANT="{TMT6,TMT10,TMT11,TMT16,TMT18,iTRAQ,Label-Free}"
   INST="{Thermo Q-Exactive HCD}" #Use Q-Exactive for all high-accuracy instruments
   BATCH="<TMT label batch(es)>" #Optional. Space separated batch names
   TARGETFDR="<Protein FDR%>" #Optional. Default is 1.0

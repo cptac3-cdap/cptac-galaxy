@@ -25,6 +25,8 @@ labels_data = """
 key
 TMT10
 TMT11
+TMT16
+TMT18
 TMT6
 iTRAQ
 Label-Free
