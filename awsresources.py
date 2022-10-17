@@ -293,6 +293,7 @@ class AWSResources(object):
             while self.volume_attached() and counter < 12:
                 time.sleep(10)
                 counter += 1
+            time.sleep(10)
             print("Deleting volume..."); sys.stdout.flush()
             self.ec2conn.delete_volume(volume_id=self.volume)
         print("Checking for stacks..."); sys.stdout.flush()

@@ -224,7 +224,7 @@ while True:
     if not cloudman_seen and elapsed > 10*60:
         print("Force starting cloudman...")
         cluster.ssh_session_start()
-        for line in cluster.execute('sudo /opt/cloudman/boot/cm_boot.py restart'):
+        for line in cluster.execute('sudo /opt/cloudman/boot/cm_boot.py restart',output=True):
             print(line)
         cluster.ssh_session_end()
     if pss == 'Completed' and galaxy == 'Running':

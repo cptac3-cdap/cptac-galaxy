@@ -25,8 +25,9 @@ Parameter file sets the follwing variables:
   BATCH="<TMT label batch(es)>" #Optional. Space separated batch names
   TARGETFDR="<Protein FDR%>" #Optional. Default is 1.0%
   INITSPECFDR="<Spec. FDR%>" #Optional. Default is \$TARGETFDR
+  VERSION="{1,2}" #Optional. Default is 1.
 
-Files <base>.mzIdentML.txt, <base>.sample.txt, <base>.qcmetrics.tsv, \$BATCH.txt are expected in the same directory as <base>.params.
+Files <base>.mzIdentML.txt, <base>.sample.txt, <base>.qcmetrics.tsv, <base>.label.txt  are expected in the same directory as <base>.params.
 
 EOF
   exit 1;
@@ -98,6 +99,9 @@ fi
 if [ "$INITSPECFDR" = "" ]; then
     INITSPECFDR="$TARGETFDR"
 fi
+if [ "$VERSION" = "" ]; then
+    VERSION=1
+fi
 
 if [ ! -f "$MZID" ]; then
     help "MZID file \"$MZID\" not found"
@@ -132,6 +136,11 @@ case $QUANT in
   *) help "Bad QUANT $QUANT in parameter file" ;;
 esac
 
+case "$VERSION" in
+  1|2) ;;
+  *) help "Bad VERSION $VERSION in parameter file";;
+esac
+
 SPECIES_FOR_WF="$SPECIES"
 if [ "$SPECIES" = "Human+Mouse" ]; then
   SPECIES_FOR_WF="Human-Mouse Xenograft"
@@ -140,6 +149,11 @@ QUANT_FOR_WF="$QUANT"
 PROTEOME_FOR_WF="$PROTEOME"
 if [ "$PROTEOME" = "Proteome" ]; then
   PROTEOME_FOR_WF="Whole Proteome"
+fi
+
+VERSION_FOR_WF=""
+if [ "$VERSION" = "2" ]; then
+  VERSION_FOR_WF=" (v2)"
 fi
 
 if [ $GENEFDR -eq 1 ]; then
@@ -153,7 +167,7 @@ else
   done
   FILES="--file \"$MZID\" --file \"$SAMP\" $BATCHFILES --file \"$QCMT\" "
   PARAM="--param cdapreports_parsnipfdr:1:initspecfdr:$INITSPECFDR --param cdapreports_parsnipfdr:1:targetprotfdr:$TARGETFDR"
-  WORKFLOW="Summary Reports: $SPECIES_FOR_WF, $QUANT_FOR_WF, $PROTEOME_FOR_WF"
+  WORKFLOW="Summary Reports${VERSION_FOR_WF}: $SPECIES_FOR_WF, $QUANT_FOR_WF, $PROTEOME_FOR_WF"
 fi
 
 echo "PARAMETERS:"
@@ -162,6 +176,7 @@ echo "Proteome: $PROTEOME"
 echo "Quantitation: $QUANT"
 echo "Label Reagent Batch IDs: $BATCH"
 echo "Workflow: $WORKFLOW"
+echo "Version: $VERSION"
 echo ""
 
 WORKFLOW="--workflow \"$WORKFLOW\" "

@@ -3,11 +3,11 @@ import sys, os, json, csv, re
 from optparse import OptionParser
 
 species_data = """
-key             genemap
-Human           prhuman2gene.csv
-Mouse           prmouse2gene.csv
-Rat             prrat2gene.csv
-Human-Mouse     prhumanmouse2gene.csv
+key		genemap
+Human		prhuman2gene.csv
+Mouse		prmouse2gene.csv
+Rat		prrat2gene.csv
+Human-Mouse	prhumanmouse2gene.csv
 """
 species = dict()
 headers = None

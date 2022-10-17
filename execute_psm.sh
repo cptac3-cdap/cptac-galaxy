@@ -21,7 +21,7 @@ Parameter file sets the follwing variables:
   PROTEOME="{Proteome,Phosphoproteome,Acetylome,Ubiquitylome,Glycoproteome}"
   QUANT="{TMT6,TMT10,TMT11,TMT16,TMT18,iTRAQ,Label-Free}"
   INST="{Thermo Velos HCD,Thermo Q-Exactive HCD}" #Use Q-Exactive for all high-accuracy instruments
-  VERSION="{1,2}" #Optional
+  VERSION="{1,2}" #Optional. Default is 1.
 
 File <base>.RAW.txt is expected in the same directory as <base>.params.
 

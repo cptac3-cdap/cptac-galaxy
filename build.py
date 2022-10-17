@@ -41,6 +41,7 @@ includes = [
     'PDC.py',
     'VERSION',
     'template.label.txt',
+    'template-tmtpro.label.txt',
     'template.params',
     'template-tmt10.sample.txt',
     'template-tmt11.sample.txt',
