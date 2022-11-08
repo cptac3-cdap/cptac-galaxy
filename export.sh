@@ -49,6 +49,21 @@ if [ "$1" ]; then
     echo "* $comment" >> $DIR/cptac-galaxy-$VERSION.txt
   done
 fi
+
+gh release delete "CPTAC-Galaxy-$VERSION" -y 
+git push --delete origin "refs/tags/CPTAC-Galaxy-$VERSION"
+git tag --delete "CPTAC-Galaxy-$VERSION"
+
+( cd workflows; \
+  gh release delete "CPTAC-Galaxy-$VERSION" -y ; \
+  git push --delete origin "refs/tags/CPTAC-Galaxy-$VERSION" ; \
+  git tag --delete "CPTAC-Galaxy-$VERSION" )
+
+( cd seqdb; \
+  gh release delete "CPTAC-Galaxy-$VERSION" -y ; \
+  git push --delete origin "refs/tags/CPTAC-Galaxy-$VERSION" ; \
+  git tag --delete "CPTAC-Galaxy-$VERSION" )
+
 gh release create "CPTAC-Galaxy-$VERSION" $DIR/cptac-galaxy-$VERSION.*.tgz $DIR/cptac-galaxy-$VERSION.md5 -t "CPTAC-Galaxy-$VERSION" -F $DIR/cptac-galaxy-$VERSION.txt
 ( cd workflows; gh release create "CPTAC-Galaxy-$VERSION" -t "CPTAC-Galaxy-$VERSION" -F $DIR/cptac-galaxy-$VERSION.empty.txt )
 ( cd seqdb; gh release create "CPTAC-Galaxy-$VERSION" -t "CPTAC-Galaxy-$VERSION" -F $DIR/cptac-galaxy-$VERSION.empty.txt )
