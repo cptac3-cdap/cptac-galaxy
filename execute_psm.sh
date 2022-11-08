@@ -21,7 +21,8 @@ Parameter file sets the follwing variables:
   PROTEOME="{Proteome,Phosphoproteome,Acetylome,Ubiquitylome,Glycoproteome}"
   QUANT="{TMT6,TMT10,TMT11,TMT16,TMT18,iTRAQ,Label-Free}"
   INST="{Thermo Velos HCD,Thermo Q-Exactive HCD}" #Use Q-Exactive for all high-accuracy instruments
-  VERSION="{1,2}" #Optional. Default is 1.
+  PROTOCOL="{CPTAC3-CDAP,...}" #Optional. Default is CPTAC3-CDAP
+  VERSION="{1,2,...}" #Optional. Default is no version
 
 File <base>.RAW.txt is expected in the same directory as <base>.params.
 
@@ -78,8 +79,8 @@ fi
 if [ "$INST" = "" ]; then
     help "INST missing from parameter file $1"
 fi
-if [ "$VERSION" = "" ]; then
-    VERSION=1
+if [ "$PROTOCOL" = "" ]; then
+    PROTOCOL="CPTAC3-CDAP"
 fi
 
 if [ ! -f "$RAW" ]; then
@@ -104,11 +105,6 @@ esac
 case "$INST" in
   "Thermo Velos HCD"|"Thermo Q-Exactive HCD") ;;
   *) help "Bad INST $INST in parameter file" ;;
-esac
-
-case "$VERSION" in
-  1|2) ;;
-  *) help "Bad VERSION $VERSION in parameter file";;
 esac
 
 if [ "$QUANT" = "TMT10" ]; then
@@ -149,11 +145,11 @@ elif [ "$PROTEOME" = "Glycoproteome" ]; then
 fi 
 
 VERSION_FOR_WF=""
-if [ "$VERSION" = "2" ]; then
-  VERSION_FOR_WF=" (v2)"
+if [ "$VERSION" != "" ]; then
+  VERSION_FOR_WF=" (v$VERSION)"
 fi
 
-WORKFLOW="CPTAC3-CDAP${VERSION_FOR_WF}: MSGF+ $PROT_FOR_WF$QUANT_FOR_PSM_WF ($INST)$SPECIES_FOR_PSM_WF"
+WORKFLOW="${PROTOCOL}${VERSION_FOR_WF}: MSGF+ $PROT_FOR_WF$QUANT_FOR_PSM_WF ($INST)$SPECIES_FOR_PSM_WF"
 DATA="--data \"$RAW\" "
 
 echo "PARAMETERS:"
@@ -162,6 +158,7 @@ echo "Proteome: $PROTEOME"
 echo "Quantitation: $QUANT"
 echo "Instrument: $INST"
 echo "Workflow: $WORKFLOW"
+echo "Protocol: $PROTOCOL"
 echo "Version: $VERSION"
 echo ""
 

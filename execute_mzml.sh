@@ -18,6 +18,8 @@ Options:
 Parameter file sets the follwing variable:
 
   INST="{Thermo Velos HCD,Thermo Q-Exactive HCD}" #Use Q-Exactive for all high-accuracy instruments
+  PROTOCOL="{CPTAC3-CDAP,...}" #Optional. Default is CPTAC3-CDAP
+  VERSION="{1,2,...}" #Optional. Default is no version
 
 File <base>.RAW.txt is expected in the same directory as <base>.params.
 
@@ -66,6 +68,10 @@ if [ "$INST" = "" ]; then
     help "INST missing from parameter file $1"
 fi
 
+if [ "$PROTOCOL" = "" ]; then
+    PROTOCOL="CPTAC3-CDAP"
+fi
+
 if [ ! -f "$RAW" ]; then
     help "RAW file \"$RAW\" not found"
 fi
@@ -75,13 +81,19 @@ case "$INST" in
   *) help "Bad INST $INST in parameter file" ;;
 esac
 
+VERSION_FOR_WF=""
+if [ "$VERSION" != "" ]; then
+  VERSION_FOR_WF=" (v$VERSION)"
+fi
 
-WORKFLOW="Raw to mzML.gz"
+WORKFLOW="${PROTOCOL}${VERSION_FOR_WF}: Raw to mzML.gz"
 DATA="--data \"$RAW\" "
 
 echo "PARAMETERS:"
 echo "Instrument: $INST"
 echo "Workflow: $WORKFLOW"
+echo "Protocol: $PROTOCOL"
+echo "Version: $VERSION"
 echo ""
 
 WORKFLOW="--workflow \"$WORKFLOW\" "

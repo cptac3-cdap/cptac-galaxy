@@ -27,6 +27,7 @@ Parameter file sets the follwing variables:
   BATCH="<TMT label batch(es)>" #Optional. Space separated batch names
   TARGETFDR="<Protein FDR%>" #Optional. Default is 1.0
   INITSPECFDR="<Spec. FDR%>" #Optional. Default is \$TARGETFDR
+  PROTOCOL="{CPTAC3-CDAP,...}" #Optional. Default is CPTAC3-CDAP
 
 Files <base>.RAW.txt, <base>.sample.txt, \$BATCH.txt are expected in the same directory as <base>.params.
 

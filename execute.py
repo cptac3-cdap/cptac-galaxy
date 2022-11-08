@@ -465,7 +465,7 @@ while True:
     if error > 10:
         break
 
-    if idle < ilimit and done < climit and passes < 2 and not disk_too_full:
+    if waiting > 0 and idle < ilimit and done < climit and passes < 2 and not disk_too_full:
         (md5hash,sha1hash,bytes,fullpath,filename,resource,username,base) = [[d.get(k) for d in [items[currentbase][p] for p in positions]] for k in ["md5hash","sha1hash","sizehash","filepath","filename","resource","username","base"]]
         assert(len(set(base)) == 1)
         base = base.pop()

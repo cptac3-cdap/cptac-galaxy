@@ -22,10 +22,10 @@ Parameter file sets the follwing variables:
   SPECIES="{Human,Mouse,Rat,Human+Mouse}"
   PROTEOME="{Proteome,Phosphoproteome,Acetylome,Ubiquitylome,Glycoproteome}"
   QUANT="{TMT6,TMT10,TMT11,TMT16,TMT18,iTRAQ,Label-free}"
-  BATCH="<TMT label batch(es)>" #Optional. Space separated batch names
   TARGETFDR="<Protein FDR%>" #Optional. Default is 1.0%
   INITSPECFDR="<Spec. FDR%>" #Optional. Default is \$TARGETFDR
-  VERSION="{1,2}" #Optional. Default is 1.
+  PROTOCOL="{CPTAC3-CDAP,...}" #Optional. Default is CPTAC3-CDAP
+  VERSION="{1,2,...}" #Optional. Default is no version
 
 Files <base>.mzIdentML.txt, <base>.sample.txt, <base>.qcmetrics.tsv, <base>.label.txt  are expected in the same directory as <base>.params.
 
@@ -75,10 +75,6 @@ fi
 
 EXTRA="$@"
 
-if [ "$EXTRA" = "" ]; then
-    EXTRA="--max_retries 0"
-fi
-
 if [ "$SPECIES" = "" ]; then
     help "SPECIES missing from parameter file $1"
 fi
@@ -99,9 +95,10 @@ fi
 if [ "$INITSPECFDR" = "" ]; then
     INITSPECFDR="$TARGETFDR"
 fi
-if [ "$VERSION" = "" ]; then
-    VERSION=1
+if [ "$PROTOCOL" = "" ]; then
+    PROTOCOL="CPTAC3-CDAP"
 fi
+
 
 if [ ! -f "$MZID" ]; then
     help "MZID file \"$MZID\" not found"
@@ -136,11 +133,6 @@ case $QUANT in
   *) help "Bad QUANT $QUANT in parameter file" ;;
 esac
 
-case "$VERSION" in
-  1|2) ;;
-  *) help "Bad VERSION $VERSION in parameter file";;
-esac
-
 SPECIES_FOR_WF="$SPECIES"
 if [ "$SPECIES" = "Human+Mouse" ]; then
   SPECIES_FOR_WF="Human-Mouse Xenograft"
@@ -152,8 +144,8 @@ if [ "$PROTEOME" = "Proteome" ]; then
 fi
 
 VERSION_FOR_WF=""
-if [ "$VERSION" = "2" ]; then
-  VERSION_FOR_WF=" (v2)"
+if [ "$VERSION" != "" ]; then
+  VERSION_FOR_WF=" (v$VERSION)"
 fi
 
 if [ $GENEFDR -eq 1 ]; then
@@ -167,7 +159,7 @@ else
   done
   FILES="--file \"$MZID\" --file \"$SAMP\" $BATCHFILES --file \"$QCMT\" "
   PARAM="--param cdapreports_parsnipfdr:1:initspecfdr:$INITSPECFDR --param cdapreports_parsnipfdr:1:targetprotfdr:$TARGETFDR"
-  WORKFLOW="Summary Reports${VERSION_FOR_WF}: $SPECIES_FOR_WF, $QUANT_FOR_WF, $PROTEOME_FOR_WF"
+  WORKFLOW="${PROTOCOL}${VERSION_FOR_WF}: Summary Reports - $SPECIES_FOR_WF, $QUANT_FOR_WF, $PROTEOME_FOR_WF"
 fi
 
 echo "PARAMETERS:"
@@ -176,11 +168,12 @@ echo "Proteome: $PROTEOME"
 echo "Quantitation: $QUANT"
 echo "Label Reagent Batch IDs: $BATCH"
 echo "Workflow: $WORKFLOW"
+echo "Protocol: $PROTOCOL"
 echo "Version: $VERSION"
 echo ""
 
 WORKFLOW="--workflow \"$WORKFLOW\" "
-CMD="$DIR/execute $WORKFLOW $FILES $PARAM $EXTRA"
+CMD="$DIR/execute $WORKFLOW $FILES $PARAM --max_retries 0 $EXTRA"
 
 if [ $ECHO -eq 1 ]; then
   echo "$CMD"

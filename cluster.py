@@ -311,6 +311,8 @@ elif cmd == "download":
 elif cmd == "cdap":
 
     params = args[-1]
+    if os.path.isdir(params) and len(glob.glob(params+"/*.params")) == 1:
+        params = glob.glob(params+"/*.params")[0]
     paramdir, paramfile = os.path.split(params)
     basename = paramfile.rsplit('.',1)[0]
     if basename in cluster.list_jobids():
