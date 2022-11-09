@@ -120,6 +120,9 @@ fi
 if [ $DOREP = 1 -a $DOPSM = 0 -a ! -f "$FILES/${BASE}.qcmetrics.tsv" ]; then
     help "Reports: QCMetrics \"$FILES/${BASE}.qcmetrics.tsv\" not found"
 fi
+if [ $DOREP = 1 -a $DOPSM = 0 -a ! -f "$FILES/${BASE}.versions.log" ]; then
+    help "Reports: QCMetrics \"$FILES/${BASE}.versions.log\" not found"
+fi
 
 cmd() {
   if [ $ECHO -eq 1 ]; then
@@ -262,6 +265,7 @@ elif [ $DOPSM = 1 ]; then
          > $FILES/${BASE}.mzIdentML.txt
 
   cp $RESULTS/SummaryReports/${BASE}.qcmetrics.tsv $FILES
+  cp $RESULTS/SummaryReports/${BASE}.versions.log $FILES
 
 fi
 
@@ -272,6 +276,9 @@ if [ $DOREP = 1 ]; then
   mkdir -p $RESULTS/SummaryReports
   if [ -f $RESULTS/SummaryReports/${BASE}.qcmetrics.tsv ]; then
     rm -f $RESULTS/SummaryReports/${BASE}.qcmetrics.tsv
+  fi
+  if [ -f $RESULTS/SummaryReports/${BASE}.versions.log ]; then
+    rm -f $RESULTS/SummaryReports/${BASE}.versions.log
   fi
 
   rotate rep.log
@@ -315,6 +322,7 @@ if [ $DOREP = 1 ]; then
     cp $L $RESULTS/SummaryReports
   done
   cp $FILES/${BASE}.qcmetrics.tsv $RESULTS/SummaryReports
+  cp $FILES/${BASE}.versions.log $RESULTS/SummaryReports
   
   cd $RESULTS
   for ck in `find SummaryReports -name "*.cksum" -type f`; do

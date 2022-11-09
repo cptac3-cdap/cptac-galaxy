@@ -324,8 +324,10 @@ elif cmd == "cdap":
     mzidfile = os.path.join(paramdir,basename+".mzIdentML.txt")
     qctsvfile = os.path.join(paramdir,basename+".qcmetrics.tsv")
     qctsvfile1 = os.path.join(paramdir,"SummaryReports",basename+".qcmetrics.tsv")
+    versions = os.path.join(paramdir,basename+".versions.log")
+    versions1 = os.path.join(paramdir,"SummaryReports",basename+".versions.log")
     uploads = []
-    for fn in [params,rawfile,samplefile,labelfile,mzidfile,qctsvfile,qctsvfile1]:
+    for fn in [params,rawfile,samplefile,labelfile,mzidfile,qctsvfile,qctsvfile1,versions,versions1]:
         if os.path.exists(fn):
             uploads.append(fn)
     batch = []
