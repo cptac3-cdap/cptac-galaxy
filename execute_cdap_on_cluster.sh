@@ -195,8 +195,6 @@ if [ $DOMZML = 1 ]; then
          
   $DIR/organize1all.sh ${BASE} `ls | egrep -v '^(mzML|mzIdentML|PSM.tsv|SummaryReports)$'` | adddate
   find . -empty -exec rm -rf {} \; >/dev/null 2>&1
-  find . -empty -exec rm -rf {} \; >/dev/null 2>&1
-  find . -empty -exec rm -rf {} \; >/dev/null 2>&1
   mkdir -p $WORK/../data/${BASE}
   for d in mzML mzIdentML PSM.tsv SummaryReports; do
     if [ -d $d -a ! -d $WORK/../data/${BASE}/$d ]; then
@@ -217,7 +215,7 @@ elif [ $DOPSM = 1 ]; then
 	    fgrep "Workflows:" psm.log | sed 's/^Workflows: //' | tail -n 1 | adddate
         if [ "`tail -n 1 psm.log`" = "Done." ]; then
             break
-	    fi
+	fi
     fi
     if ! kill -0 `cat psm.pid` >/dev/null 2>&1; then
       break
@@ -250,8 +248,6 @@ elif [ $DOPSM = 1 ]; then
          
   $DIR/organize1all.sh ${BASE} `ls | egrep -v '^(mzML|mzIdentML|PSM.tsv|SummaryReports)$'` | adddate
   find . -empty -exec rm -rf {} \; >/dev/null 2>&1
-  find . -empty -exec rm -rf {} \; >/dev/null 2>&1
-  find . -empty -exec rm -rf {} \; >/dev/null 2>&1
   mkdir -p $WORK/../data/${BASE}
   for d in mzML mzIdentML PSM.tsv SummaryReports; do
     if [ -d $d -a ! -d $WORK/../data/${BASE}/$d ]; then
@@ -266,6 +262,7 @@ elif [ $DOPSM = 1 ]; then
 
   cp $RESULTS/SummaryReports/${BASE}.qcmetrics.tsv $FILES
   cp $RESULTS/SummaryReports/${BASE}.versions.log $FILES
+  sed -n '/^PARAMETERS:$/,/^$/p' psm.log | fgrep -v 'PARAMETERS:' | grep -v '^$' >> $FILES/${BASE}.versions.log
 
 fi
 
