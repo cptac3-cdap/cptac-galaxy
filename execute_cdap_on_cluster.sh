@@ -262,7 +262,7 @@ elif [ $DOPSM = 1 ]; then
 
   cp $RESULTS/SummaryReports/${BASE}.qcmetrics.tsv $FILES
   cp $RESULTS/SummaryReports/${BASE}.versions.log $FILES
-  sed -n '/^PARAMETERS:$/,/^$/p' psm.log | fgrep -v 'PARAMETERS:' | grep -v '^$' >> $FILES/${BASE}.versions.log
+  sed -n '/^PARAMETERS:$/,/^$/p' $WORK/psm.log | fgrep -v 'PARAMETERS:' | grep -v '^$' >> $FILES/${BASE}.versions.log
 
 fi
 
