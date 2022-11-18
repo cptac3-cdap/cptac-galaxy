@@ -27,7 +27,8 @@ Parameter file sets the follwing variables:
   BATCH="<TMT label batch(es)>" #Optional. Space separated batch names
   TARGETFDR="<Protein FDR%>" #Optional. Default is 1.0
   INITSPECFDR="<Spec. FDR%>" #Optional. Default is \$TARGETFDR
-  PROTOCOL="{CPTAC3-CDAP,...}" #Optional. Default is CPTAC3-CDAP
+  PROTOCOL="{CPTAC4-CDAP,...}" #Optional. Default is CPTAC4-CDAP.
+  VERSION="{1,2,...}" #Optional. Default is version 2.
 
 Files <base>.RAW.txt, <base>.sample.txt, \$BATCH.txt are expected in the same directory as <base>.params.
 
@@ -162,7 +163,7 @@ if [ $DOMZML = 1 ]; then
 	fgrep "Workflows:" mzml.log | sed 's/^Workflows: //' | tail -n 1 | adddate
         if [ "`tail -n 1 mzml.log`" = "Done." ]; then
             break
-	    fi
+	fi
     fi
     if ! kill -0 `cat mzml.pid` >/dev/null 2>&1; then
       break
@@ -201,6 +202,9 @@ if [ $DOMZML = 1 ]; then
       ln -s $RESULTS/$d $WORK/../data/${BASE}/$d
     fi
   done
+
+  touch $RESULTS/SummaryReports/${BASE}.versions.log
+  sed -n '/^PARAMETERS:$/,/^$/p' $WORK/psm.log | fgrep -v 'PARAMETERS:' | grep -v '^$' >> $RESULTS/SummaryReports/${BASE}.versions.log
 
 elif [ $DOPSM = 1 ]; then
 
@@ -320,6 +324,7 @@ if [ $DOREP = 1 ]; then
   done
   cp $FILES/${BASE}.qcmetrics.tsv $RESULTS/SummaryReports
   cp $FILES/${BASE}.versions.log $RESULTS/SummaryReports
+  sed -n '/^PARAMETERS:$/,/^$/p' $WORK/rep.log | fgrep -v 'PARAMETERS:' | grep -v '^$' >> $RESULTS/SummaryReports/${BASE}.versions.log
   
   cd $RESULTS
   for ck in `find SummaryReports -name "*.cksum" -type f`; do

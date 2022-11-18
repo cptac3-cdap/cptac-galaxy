@@ -24,8 +24,8 @@ Parameter file sets the follwing variables:
   QUANT="{TMT6,TMT10,TMT11,TMT16,TMT18,iTRAQ,Label-free}"
   TARGETFDR="<Protein FDR%>" #Optional. Default is 1.0%
   INITSPECFDR="<Spec. FDR%>" #Optional. Default is \$TARGETFDR
-  PROTOCOL="{CPTAC3-CDAP,...}" #Optional. Default is CPTAC3-CDAP
-  VERSION="{1,2,...}" #Optional. Default is no version
+  PROTOCOL="{CPTAC4-CDAP,...}" #Optional. Default is CPTAC4-CDAP.
+  VERSION="{1,2,...}" #Optional. Default is 2.
 
 Files <base>.mzIdentML.txt, <base>.sample.txt, <base>.qcmetrics.tsv, <base>.label.txt  are expected in the same directory as <base>.params.
 
@@ -96,9 +96,11 @@ if [ "$INITSPECFDR" = "" ]; then
     INITSPECFDR="$TARGETFDR"
 fi
 if [ "$PROTOCOL" = "" ]; then
-    PROTOCOL="CPTAC3-CDAP"
+    PROTOCOL="CPTAC4-CDAP"
 fi
-
+if [ "$VERSION" = "" ]; then
+    VERSION="2"
+fi
 
 if [ ! -f "$MZID" ]; then
     help "MZID file \"$MZID\" not found"
@@ -166,10 +168,9 @@ echo "PARAMETERS:"
 echo "Species: $SPECIES"
 echo "Proteome: $PROTEOME"
 echo "Quantitation: $QUANT"
-echo "Label Reagent Batch IDs: $BATCH"
-echo "Workflow: $WORKFLOW"
 echo "Protocol: $PROTOCOL"
-echo "Version: $VERSION"
+echo "Protocol Version: $VERSION"
+echo "Workflow: $WORKFLOW"
 echo ""
 
 WORKFLOW="--workflow \"$WORKFLOW\" "
