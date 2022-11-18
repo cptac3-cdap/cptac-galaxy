@@ -204,7 +204,7 @@ if [ $DOMZML = 1 ]; then
   done
 
   touch $RESULTS/SummaryReports/${BASE}.versions.log
-  sed -n '/^PARAMETERS:$/,/^$/p' $WORK/psm.log | fgrep -v 'PARAMETERS:' | grep -v '^$' >> $RESULTS/SummaryReports/${BASE}.versions.log
+  sed -n '/^PARAMETERS:$/,/^$/p' $WORK/mzml.log | fgrep -v 'PARAMETERS:' | grep -v '^$' >> $RESULTS/SummaryReports/${BASE}.versions.log
 
 elif [ $DOPSM = 1 ]; then
 
