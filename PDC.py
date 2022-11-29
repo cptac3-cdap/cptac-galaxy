@@ -83,8 +83,10 @@ class PDC(object):
         for k in kw:
             constraints.append("%s: \"%s\""%(k,kw[k]))
         constraints = ", ".join(constraints)
-        for r in self.query(self._study_query%(constraints,))['data']['study']:
-            yield r
+        res =  self.query(self._study_query%(constraints,))
+        if res['data']['study']:
+            for r in res['data']['study']:
+                yield r
 
     def find_study_id(self,study_submitter_id):
         study_id = None
@@ -406,7 +408,7 @@ if __name__ == "__main__":
     pdc = PDC()
 
     try:
-        st = pdc.find_study(sys.argv[1],rawfnmatch="B1_prot_F1")
+        st = pdc.find_study(sys.argv[1])
         print(st.name())
         print("RAW spectra files")
         for f in st.rawfiles():

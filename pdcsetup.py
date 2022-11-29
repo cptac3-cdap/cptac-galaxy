@@ -190,12 +190,14 @@ for rf in study.rawfiles():
     #              'fullpathfmt': rf.get('signedUrl').replace('%','%%').replace(rf.get('file_location'),'%s')}
     #     line.append(";".join(map(lambda kv: "%s=%s"%kv,extra.items())))
     #     print("\t".join(line),file=wh2)
-    samplerow = ["^%s$"%re.escape(rf['file_name'].rsplit('.',1)[0]),rf['study_run_metadata_id']]
     ansamp = rf['plex_or_dataset_name']
+    samplerow = ["^%s$"%re.escape(rf['file_name'].rsplit('.',1)[0]),
+                 ":".join([ansamp,rf['study_run_metadata_id']])]
     samples = dict()
     for tag in labelmap:
         lab = labelmap[tag]
-        asi = rf[tag][0]['aliquot_run_metadata_id'].replace(" ","")
+        asi = ":".join([rf[tag][0]['aliquot_submitter_id'].replace(" ",""),
+                        rf[tag][0]['aliquot_run_metadata_id'].replace(" ","")])
         if opts.denomaspool and tag == study.pool_label(ansamp):
             asi = "POOL"
         samples[lab] = asi
