@@ -16,6 +16,8 @@ parser.add_option("--ratiodenom",type="string",dest="ratiodenom",default=None,he
 parser.add_option("--denomaspool",action="store_true",dest="denomaspool",default=False,help="Label denominator as POOL, only if a single ratio denominator is used. Default: False.")
 parser.add_option("--labelbatch",type="string",dest="labelbatch",default=None,help="Label batch to use.")
 parser.add_option("--s3",dest="userclone",action="store_true",default=False,help="Access RAW files by S3 (rclone). Default: False.")
+parser.add_option("--plexorder",type="string",dest="ansamporder",default=None,help="Regular expression to extract the ordinal from submitter provided plexes. Default: None.")
+parser.add_option("--plexordergroup",type="int",dest="ansampordergrp",default=None,help="Regular expression group for the extractions of the the ordinal from submitter provided plexes. Default: None.")
 parser.add_option("--rawfiles",type="string",dest="rawfiles",default=None,help="Regular expression for raw filenames, without the extention. For example, ^0[123].*0[12A]$ will match fractions 1, 2, and A, from analytical samples 1, 2, and 3 (for some studies).")
 
 opts, args = parser.parse_args()
@@ -59,7 +61,7 @@ else:
     raise RuntimeError("Bad --pdcapi option: "+opts.pdcapi)
 
 try:
-    study = pdc.find_study(study_id,rawfnmatch=opts.rawfiles,labelbatch=opts.labelbatch,ratiodenom=opts.ratiodenom)
+    study = pdc.find_study(study_id,rawfnmatch=opts.rawfiles,labelbatch=opts.labelbatch,ratiodenom=opts.ratiodenom,ansampregex=opts.ansamporder,ansampregexgrp=opts.ansampordergrp)
 except ConnectionError as e:
     traceback.print_exc()
     raise RuntimeError("Can't access PDC API[%s]: %s"%(opts.pdcapi,pdc.graphql))
@@ -222,11 +224,11 @@ wh = open("%s/%s.params"%(workdir,basename,),'w')
 print("SPECIES=\"%s\""%(taxon,), file=wh)
 print("PROTEOME=\"%s\""%(analyte,), file=wh)
 print("QUANT=\"%s\""%(exprtype,), file=wh)
-if study.has_label_reagents():
-    print("BATCH=\"%s\""%(" ".join([s.rsplit('.',1)[0] for s in study.label_reagents()])), file=wh)
+# if study.has_label_reagents():
+#     print("BATCH=\"%s\""%(" ".join([s.rsplit('.',1)[0] for s in study.label_reagents()])), file=wh)
 print("INST=\"%s\""%(instr), file=wh)
 wh.close()
-study.write_label_reagents("%s"%(workdir,))
+# study.write_label_reagents("%s"%(workdir,))
 
 print("StudyID: "+study.id())
 print("JobID:   "+workdir)

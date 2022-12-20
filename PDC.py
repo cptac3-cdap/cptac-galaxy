@@ -36,10 +36,14 @@ class PDC(object):
     @staticmethod
     def rawfilesortkey(f):
         try:
-            return (f['plex_or_dataset_name'],int(f['fraction_number']),"")
+            pdind = (int(f.get('plex_or_dataset_name_index',"")),"")
         except ValueError:
-            pass
-        return (f['plex_or_dataset_name'],1e+20,f['fraction_number'])
+            pdind = (1e+20,f.get('plex_or_dataset_name_index'))
+        try:
+            fn = (int(f['fraction_number']),"")
+        except ValueError:
+            fn = (1e+20,f['fraction_number'])
+        return pdind[0],pdind[1],f['plex_or_dataset_name'],fn[0],fn[1]
 
     def post(self,query):
         return requests.post(self.graphql, json={'query': query}, verify=False)
@@ -140,7 +144,7 @@ class PDC(object):
             if r['file_name'].endswith('.txt') and r['file_type'] == 'Text' and r['file_format'] == 'TSV':
                 yield r
 
-    def study_rawfiles(self,study_id,limit=None,fnmatch=None):
+    def study_rawfiles(self,study_id,limit=None,fnmatch=None,ansampregex=None,ansampregexgrp=None):
         biospec = {}
         for r in self._biospecimenPerStudy(study_id):
             biospec[r['aliquot_id']] = copy.copy(r)
@@ -148,12 +152,21 @@ class PDC(object):
         for r in self._studyExperimentalDesign(study_id):
             expdes[r['plex_dataset_name']] = copy.copy(r)
         # print expdes.keys()
+        if ansampregex:
+            ansampregex = re.compile(ansampregex)
         for f in self._rawfilesPerStudy(study_id,limit=limit,fnmatch=fnmatch):
             fid = f['file_id']
             f.update(self._fileMetadata(file_id=fid))
             for a in f['aliquots']:
                 a.update(biospec.get(a['aliquot_id'],{}))
             f.update(expdes[f['plex_or_dataset_name']])
+            if ansampregex:
+                m = ansampregex.search(f['plex_or_dataset_name'])
+                if m:
+                    if not ansampregexgrp and m.group(0):
+                        f['plex_or_dataset_name_index'] = m.group(0)
+                    elif ansampregexgrp and m.group(ansampregexgrp):
+                        f['plex_or_dataset_name_index'] = m.group(ansampregexgrp)
             yield f
 
     def study_experimental_design(self,study_id):
@@ -248,7 +261,7 @@ def labelsort(l):
 
 class Study(object):
 
-    def __init__(self,pdc,study_id,rawfnmatch=None,ratiodenom=None,labelbatch=None):
+    def __init__(self,pdc,study_id,rawfnmatch=None,ratiodenom=None,labelbatch=None,ansampregex=None,ansampregexgrp=None):
         self._pdc = pdc
         self._study_id = study_id
         self._study = pdc.get_study(study_id)
@@ -258,7 +271,7 @@ class Study(object):
         ansamps = set()
         labels = set()
         pool = defaultdict(int)
-        for f in sorted(pdc.study_rawfiles(self._study_id,fnmatch=rawfnmatch),key=PDC.rawfilesortkey):
+        for f in sorted(pdc.study_rawfiles(self._study_id,fnmatch=rawfnmatch,ansampregex=ansampregex,ansampregexgrp=ansampregexgrp),key=PDC.rawfilesortkey):
             for a in f['aliquots']:
                 if a.get('taxon') and a.get('pool') != 'Yes':
                     taxon.add(a.get('taxon'))
