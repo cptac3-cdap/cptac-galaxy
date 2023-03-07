@@ -116,7 +116,7 @@ elif cmd == "version":
 
 elif cmd == "update":
 
-    cluster.update(*args[:1])
+    cluster.update(version=args[0],tools_version=args[1])
     print("")
     for k,v in sorted(cluster.version().items()):
         print("%s: %s"%(k,v))

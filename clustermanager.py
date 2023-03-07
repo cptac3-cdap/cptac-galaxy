@@ -201,7 +201,7 @@ class Cluster(object):
 
     def update(self,version=None,tools_version=None):
         self.ssh_session_start()
-        if not version:
+        if not version or version == "-":
             version = open(os.path.join(os.path.split(os.path.abspath(sys.argv[0]))[0],'VERSION')).read().strip()
         print("Update cptac-galaxy and cptac-galaxy workflows to version %s ..."%(version,), end=' ')
         sys.stdout.flush()
@@ -209,7 +209,7 @@ class Cluster(object):
             pass # print line
         print("done.")
         sys.stdout.flush()
-        if not tools_version:
+        if not tools_version or tools_version == "-":
             for line in self.execute("cat cptac-galaxy/.defaults.ini",output=True):
                 sl = line.split()
                 if sl[0] == "tools_version":
