@@ -12,7 +12,7 @@ class DatafileCollection(object):
                    os.path.join("cptac-galaxy","cptacdcc"),
                    os.path.join(os.sep,"home","ubuntu","cptac-galaxy","cptacdcc"), # absolute path
                    os.path.join("..","lib","cptac3-cdap","cptac-dcc","cptacdcc") ]
-    resources = ["portal","portalurl","url","dcc","dcctr","s3","local","rclone","pdc","pdcdev"]
+    resources = ["portal","portalurl","url","dcc","dcctr","s3","local","rclone","pdc","pdcdev","panorama"]
 
     def __init__(self,credentials=None):
         self._files = defaultdict(dict)
@@ -187,9 +187,13 @@ class DatafileCollection(object):
 
             h = open(cksumdata,'rb')
             if resource.startswith('dcc/'):
-                resource,username = resource.split('/')
+                resource,username = resource.split('/',1)
+            elif resource.startswith('dcctr/'):
+                resource,username = resource.split('/',1)
+            elif resource.startswith('panorama/'):
+                resource,username = resource.split('/',1)
             elif resource.startswith('rclone/'):
-                resource,remote = resource.split('/')
+                resource,remote = resource.split('/',1)
             elif resource == 'rclone' and prefixpath != None and ':' in prefixpath:
                 remote,prefixpath = prefixpath.split(':',1)
             elif resource == 'rclone' and fullpathfmt != None and ':' in fullpathfmt:
@@ -242,7 +246,7 @@ class DatafileCollection(object):
                 if not prefixpath and not fullpathfmt:
                     prefixpath = cksumdata[:-len('.cksum')]
 
-            elif resource in ('local','pdc','pdcdev'):
+            elif resource in ('local','pdc','pdcdev','panorama'):
                 if not os.path.exists(cksumdata):
                     raise RuntimeError("[%s] Can't retrieve local path %s"%(resource,cksumdata))
                 h = open(cksumdata,'rb')
