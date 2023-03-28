@@ -253,20 +253,26 @@ class DatafileCollection(object):
                 if not prefixpath and not fullpathfmt:
                     prefixpath = cksumdata[:-len('.cksum')]
 
-            elif resource.startswith('dcc/'):
+            elif resource.startswith('dcc'):
                 if self._dccreqcount > 0 and self._dccreqcount % self._dccreqwaitfreq == 0:
                     time.sleep(self._dccreqwait)
                 self._dccreqcount += 1
-                resource,username = resource.split('/')
+                try:
+                    resource,username = resource.split('/')
+                    credkey = "%s@%s"%(username,resource)
+                except ValueError:
+                    forresource = [ v for v in self.credentials.values() if v['site'] == resource ]
+                    assert len(forresource == 1)
+                    username = forresource[0]['username']
+                    credkey = "%s@%s"%(username,resource)
                 tmpdir = tempfile.mkdtemp(suffix="",prefix=".",dir=os.getcwd())
                 credfile = None
-                if resource == "dcc":
-                    theportaltag = "dccnodescrape"
-                    if self.credentials and username in self.credentials and not self.credentials[username]['transfer']:
+                if self.credentials and credkey in self.credentials:
+                    if resource == "dcc":
+                        theportaltag = "dccnodescrape"
                         credfile = os.path.join(tmpdir,'cptacdcc.ini')
-                else:
-                    theportaltag = "transfer"
-                    if self.credentials and username in self.credentials and self.credentials[username]['transfer']:
+                    elif resource == "dcctr":
+                        theportaltag = "transfer"
                         credfile = os.path.join(tmpdir,'cptactransfer.ini')
                 if credfile:
                     wh = open(credfile,'w')
@@ -274,7 +280,7 @@ class DatafileCollection(object):
 [Portal]
 User = %s
 Password = %s
-                    """%(username,self.credentials[username]['password'].replace('%','%%')), file=wh)
+                    """%(username,self.credentials[credkey]['password'].replace('%','%%')), file=wh)
                     wh.close()
                 cmd = "%s %s get -q %s"%(self.cptacportal,theportaltag,cksumdata)
                 cksumdatafile = os.path.join(tmpdir,cksumdata.rsplit('/',1)[1])
