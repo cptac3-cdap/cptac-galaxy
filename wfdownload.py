@@ -73,6 +73,14 @@ for wfname in wfname2id:
         del wfdict['steps'][key]
     if 'uuid' in wfdict:
         del wfdict['uuid']
+    for st in wfdict['steps']:
+        if 'workflow_outputs' in wfdict['steps'][st]:
+            wfdict['steps'][st]['workflow_outputs'] = sorted(wfdict['steps'][st]['workflow_outputs'],key=lambda d: d.get('output_name'))
+    for st in wfdict['steps']:
+        if 'position' in wfdict['steps'][st]:
+            for k,v in wfdict['steps'][st]['position'].items():
+                wfdict['steps'][st]['position'][k] = round(v,6)
+   
     wfstr = json.dumps(wfdict,sort_keys=True,indent=4)
     wffilepath = os.path.join(opts.directory,wffilename)
     if os.path.exists(wffilepath):
