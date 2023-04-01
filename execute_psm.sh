@@ -20,7 +20,7 @@ Parameter file sets the follwing variables:
   SPECIES="{Human,Mouse,Rat,Human+Mouse}"
   PROTEOME="{Proteome,Phosphoproteome,Acetylome,Ubiquitylome,Glycoproteome}"
   QUANT="{TMT6,TMT10,TMT11,TMT16,TMT18,iTRAQ,Label-Free}"
-  INST="{Thermo Velos HCD,Thermo Q-Exactive HCD}" #Use Q-Exactive for all high-accuracy instruments
+  INST="{Thermo Velos HCD,Thermo Q-Exactive HCD,Thermo Q-Exactive CID}" #Use Q-Exactive for all high-accuracy instruments
   PROTOCOL="{CPTAC4-CDAP,...}" #Optional. Default is CPTAC4-CDAP.
   VERSION="{1,2,...}" #Optional. Default is version 2.
 
@@ -106,7 +106,7 @@ case $QUANT in
 esac
 
 case "$INST" in
-  "Thermo Velos HCD"|"Thermo Q-Exactive HCD") ;;
+  "Thermo Velos HCD"|"Thermo Q-Exactive HCD"|"Thermo Q-Exactive CID") ;;
   *) help "Bad INST $INST in parameter file" ;;
 esac
 
