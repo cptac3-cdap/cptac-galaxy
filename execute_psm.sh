@@ -19,7 +19,7 @@ Parameter file sets the follwing variables:
 
   SPECIES="{Human,Mouse,Rat,Human+Mouse}"
   PROTEOME="{Proteome,Phosphoproteome,Acetylome,Ubiquitylome,Glycoproteome}"
-  QUANT="{TMT6,TMT10,TMT11,TMT16,TMT18,iTRAQ,Label-Free}"
+  QUANT="{TMT6,TMT10,MS3-TMT10,TMT11,MS3-TMT11,TMT16,MS3-TMT16,TMT18,MS3-TMT18,iTRAQ,Label-Free}"
   INST="{Thermo Velos HCD,Thermo Q-Exactive HCD,Thermo Q-Exactive CID}" #Use Q-Exactive for all high-accuracy instruments
   PROTOCOL="{CPTAC4-CDAP,...}" #Optional. Default is CPTAC4-CDAP.
   VERSION="{1,2,...}" #Optional. Default is version 2.
@@ -101,7 +101,7 @@ case $PROTEOME in
 esac
 
 case $QUANT in
-  TMT6|TMT10|TMT11|TMT16|TMT18|iTRAQ|Label-Free) ;;
+  TMT6|TMT10|MS3-TMT10|TMT11|MS3-TMT11|TMT16|MS3-TMT16|TMT18|MS3-TMT18|iTRAQ|Label-Free) ;;
   *) help "Bad QUANT $QUANT in parameter file" ;;
 esac
 
@@ -118,6 +118,14 @@ elif [ "$QUANT" = "TMT16" ]; then
   QUANT_FOR_PSM_WF="TMT 16-plex"
 elif [ "$QUANT" = "TMT18" ]; then
   QUANT_FOR_PSM_WF="TMT 18-plex"
+elif [ "$QUANT" = "MS3-TMT10" ]; then
+  QUANT_FOR_PSM_WF="MS3-TMT 10-plex"
+elif [ "$QUANT" = "MS3-TMT11" ]; then
+  QUANT_FOR_PSM_WF="MS3-TMT 11-plex"
+elif [ "$QUANT" = "MS3-TMT16" ]; then
+  QUANT_FOR_PSM_WF="MS3-TMT 16-plex"
+elif [ "$QUANT" = "MS3-TMT18" ]; then
+  QUANT_FOR_PSM_WF="MS3-TMT 18-plex"
 elif [ "$QUANT" = "TMT6" ]; then
   QUANT_FOR_PSM_WF="TMT 6-plex"
 elif [ "$QUANT" = "iTRAQ" ]; then
