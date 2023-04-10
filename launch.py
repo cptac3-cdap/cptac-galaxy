@@ -43,8 +43,8 @@ general = dict(list(cm.items()))
 from optparse import OptionParser, OptionGroup
 parser = OptionParser()
 advanced = OptionGroup(parser, "Advanced")
-parser.add_option("--winpulsar",dest="winpulsar",type="int",default=1,
-                  help="Number of Windows Pulsar nodes to start. Default: 1")
+parser.add_option("--winpulsar",dest="winpulsar",type="int",default=0,
+                  help="Number of Windows Pulsar nodes to start. Default: 0")
 parser.add_option("--workers",dest="workers",type="int",default=2,
                   help="Max. worker nodes for autoscale. Default: 2")
 parser.add_option("--master",dest="master",type="choice",

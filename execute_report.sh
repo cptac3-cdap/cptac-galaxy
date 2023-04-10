@@ -139,7 +139,12 @@ SPECIES_FOR_WF="$SPECIES"
 if [ "$SPECIES" = "Human+Mouse" ]; then
   SPECIES_FOR_WF="Human-Mouse Xenograft"
 fi
-QUANT_FOR_WF="$QUANT"
+
+case $QUANT in
+  MS3-*) QUANT_FOR_WF=`echo "$QUANT" | sed 's/MS3-//'`;;
+  *) QUANT_FOR_WF="$QUANT" ;;
+esac
+
 PROTEOME_FOR_WF="$PROTEOME"
 if [ "$PROTEOME" = "Proteome" ]; then
   PROTEOME_FOR_WF="Whole Proteome"
