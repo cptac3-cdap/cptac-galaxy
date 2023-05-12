@@ -292,7 +292,7 @@ if os.path.exists(seqdbini):
         if not os.path.exists(os.path.join(seqdbdir,filename)):
             if os.path.exists(os.path.join(seqdbdir,filename+".gz.00")):
                 subprocess.run("cat %s.gz.* | gunzip -c > %s"%(os.path.join(seqdbdir,filename),
-                                                                os.path.join(seqdbdir,filename),shell=True)
+                                                                os.path.join(seqdbdir,filename)),shell=True)
 
         try:
             id = gi.tools.upload_file(os.path.join(seqdbdir,filename),hi,file_name=filename)['outputs'][0]['id']; ids['SeqDB'].add(id)
