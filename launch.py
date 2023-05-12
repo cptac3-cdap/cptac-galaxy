@@ -17,6 +17,7 @@ from lockfile import FileLock
 from collections import defaultdict
 import configparser
 import traceback
+import subprocess
 
 scriptdir = os.path.split(os.path.abspath(sys.argv[0]))[0]
 scriptextn = ''
@@ -287,6 +288,11 @@ if os.path.exists(seqdbini):
         seqid = filename.rsplit('.',1)[0]
         species = seqconf.get(sdb,'Species',fallback='Unknown')
         source = seqconf.get(sdb,'Source',fallback='Unknown')
+
+        if not os.path.exists(os.path.join(seqdbdir,filename)):
+            if os.path.exists(os.path.join(seqdbdir,filename+".gz.00")):
+                subprocess.run("cat %s.gz.* | gunzip -c > %s"%(os.path.join(seqdbdir,filename),
+                                                                os.path.join(seqdbdir,filename),shell=True)
 
         try:
             id = gi.tools.upload_file(os.path.join(seqdbdir,filename),hi,file_name=filename)['outputs'][0]['id']; ids['SeqDB'].add(id)
