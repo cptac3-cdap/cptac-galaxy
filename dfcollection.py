@@ -261,18 +261,20 @@ class DatafileCollection(object):
                     resource,username = resource.split('/')
                     credkey = "%s@%s"%(username,resource)
                 except ValueError:
-                    forresource = [ v for v in self.credentials.values() if v['site'] == resource ]
-                    assert len(forresource == 1)
-                    username = forresource[0]['username']
-                    credkey = "%s@%s"%(username,resource)
+                    if self.credentials:
+                        forresource = [ v for v in self.credentials.values() if v['site'] == resource ]
+                        assert len(forresource == 1)
+                        username = forresource[0]['username']
+                        credkey = "%s@%s"%(username,resource)
                 tmpdir = tempfile.mkdtemp(suffix="",prefix=".",dir=os.getcwd())
                 credfile = None
-                if self.credentials and credkey in self.credentials:
-                    if resource == "dcc":
-                        theportaltag = "dccnodescrape"
+                if resource == "dcc":
+                    theportaltag = "dccnodescrape"
+                    if self.credentials and credkey in self.credentials:
                         credfile = os.path.join(tmpdir,'cptacdcc.ini')
-                    elif resource == "dcctr":
-                        theportaltag = "transfer"
+                elif resource == "dcctr":
+                    theportaltag = "transfer"
+                    if self.credentials and credkey in self.credentials:
                         credfile = os.path.join(tmpdir,'cptactransfer.ini')
                 if credfile:
                     wh = open(credfile,'w')
