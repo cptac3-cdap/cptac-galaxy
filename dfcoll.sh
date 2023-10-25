@@ -21,7 +21,7 @@ urllist() {
 }
 
 case "$1" in
-  dcc/*)  CMD="dcclist $1 $2";;
+  dcc*)  CMD="dcclist $1 $2";;
   portal) CMD="portallist $2";;
   url)    CMD="urllist  $2";;
   *)      echo "Bad resource: $1" 1>&2; exit 1;;
