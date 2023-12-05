@@ -134,6 +134,25 @@ elif exprtype == 'TMT11':
                 'tmt_131':  '131N',
                 'tmt_131c': '131C'
                 }
+elif exprtype == 'TMT16':
+    labels = ['126C','127N','127C','128N','128C','129N','129C','130N','130C','131N','131C','132N','132C','133N','133C','134N']
+    labelmap = {'tmt_126':  '126C',
+                'tmt_127n': '127N',
+                'tmt_127c': '127C',
+                'tmt_128n': '128N',
+                'tmt_128c': '128C',
+                'tmt_129n': '129N',
+                'tmt_129c': '129C',
+                'tmt_130n': '130N',
+                'tmt_130c': '130C',
+                'tmt_131':  '131N',
+                'tmt_131c': '131C',
+                'tmt_132n': '132N',
+                'tmt_132c': '132C',
+                'tmt_133n': '133N',
+                'tmt_133c': '133C',
+                'tmt_134n': '134N',
+                }
 elif exprtype == "Label Free":
     labels = ['000']
     labelmap = {'Label Free': '000'}

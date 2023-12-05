@@ -229,7 +229,14 @@ class PDC(object):
      tmt_130n{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}, 
      tmt_130c{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}, 
      tmt_131{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id},
-     tmt_131c{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}
+     tmt_131c{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id},
+     tmt_132n{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id},
+     tmt_132c{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id},
+     tmt_133n{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id},
+     tmt_133c{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id},
+     tmt_134n{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id},
+     tmt_134c{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id},
+     tmt_135n{aliquot_id, aliquot_run_metadata_id, aliquot_submitter_id}
      } }
     '''
     def _studyExperimentalDesign(self,study_id):
