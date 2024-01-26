@@ -59,6 +59,7 @@ class PDC(object):
         if pdc_response.ok:
             # Decode the response
             decoded = pdc_response.json()
+            # print(decoded)
         else:
             # Response not OK, see error
             try:
@@ -92,14 +93,18 @@ class PDC(object):
             for r in res['data']['study']:
                 yield r
 
-    def find_study_id(self,study_submitter_id):
+    def find_study_id(self,search_term):
         study_id = None
-        for i,r in enumerate(self._filesPerStudy(study_submitter_id=study_submitter_id)):
+        for i,r in enumerate(self._filesCountPerStudy(study_submitter_id=search_term)):
             if study_id != None and r['study_id'] != study_id:
-                raise RuntimeError("Mutiple studies match study_submitter_id: %s"%(study_submitter_id))
+                raise RuntimeError("Mutiple studies match: %s"%(search_term,))
+            study_id = r['study_id']
+        for i,r in enumerate(self._filesCountPerStudy(pdc_study_id=search_term)):
+            if study_id != None and r['study_id'] != study_id:
+                raise RuntimeError("Mutiple studies match: %s"%(search_term))
             study_id = r['study_id']
         if not study_id:
-            raise RuntimeError("No studies match study_submitter_id: %s"%(study_submitter_id))
+            raise RuntimeError("No studies match: %s"%(search_term))
         return study_id
 
     def find_study(self,study,**kwargs):
@@ -135,14 +140,69 @@ class PDC(object):
                 if limit != None and i > limit:
                     break
 
-    def _rawfilesPerStudy(self,study_id,**kw):
-        for r in self._filesPerStudy(study_id=study_id,data_category="Raw Mass Spectra",**kw):
-            yield r
+    def _rawfilesPerStudy(self,study_id,limit=None,fnmatch=None,**kw):
+        total = self._rawfilesCountPerStudy(study_id)
+        i = 0
+        for st in range(0,total,1000):
+          for r in self._getPaginatedFiles(offset=st,limit=1000,study_id=study_id,data_category="Raw Mass Spectra",**kw):
+            if not fnmatch or re.search(fnmatch,r['file_name'].rsplit('.',1)[0]):
+              # r['signedUrl'] = r['signedUrl']['url']
+              yield r
+              i += 1
+              if limit != None and i >= limit:
+                break
 
     def _mdfilesPerStudy(self,study_id,**kw):
-        for r in self._filesPerStudy(study_id=study_id,**kw):
+        total = self._mdfilesCountPerStudy(study_id)
+        for st in range(0,total,1000):
+          for r in self._getPaginatedFiles(offset=st,limit=1000,study_id=study_id,data_category="Other Metadata",**kw):
             if r['file_name'].endswith('.txt') and r['file_type'] == 'Text' and r['file_format'] == 'TSV':
+              yield r
+
+    _filesCountPerStudy_query = '''
+    { filesCountPerStudy (%s, acceptDUA: true) {
+        study_id pdc_study_id study_submitter_id file_type files_count data_category}
+    }
+    '''
+
+    def _filesCountPerStudy(self,data_category=None,**kw):
+        constraints = []
+        for k in kw:
+            constraints.append("%s: \"%s\""%(k,kw[k]))
+        constraints = ", ".join(constraints)
+        for r in self.query(self._filesCountPerStudy_query%(constraints,))['data']['filesCountPerStudy']:
+            if not data_category or r['data_category'] == data_category:
                 yield r
+
+    def _rawfilesCountPerStudy(self,study_id,**kw):
+        for r in self._filesCountPerStudy(study_id=study_id,data_category="Raw Mass Spectra",**kw):
+            return r['files_count']
+        return None
+
+    def _mdfilesCountPerStudy(self,study_id,**kw):
+        for r in self._filesCountPerStudy(study_id=study_id,data_category="Other Metadata",**kw):
+            return r['files_count']
+        return None
+
+    _getPaginatedFiles_query = '''
+       { getPaginatedFiles(offset: %s, limit: %s, %s, acceptDUA: true) { 
+         total 
+         files { 
+           study_id pdc_study_id study_submitter_id file_id file_name file_type md5sum data_category
+         }  
+         pagination { 
+          count sort from page total pages size
+         }
+       }}
+    '''
+        
+    def _getPaginatedFiles(self,offset=0,limit=10,**kw):
+        constraints = []
+        for k in kw:
+            constraints.append("%s: \"%s\""%(k,kw[k]))
+        constraints = ", ".join(constraints)
+        for r in self.query(self._getPaginatedFiles_query%(offset,limit,constraints,))['data']['getPaginatedFiles']['files']:
+            yield r
 
     def study_rawfiles(self,study_id,limit=None,fnmatch=None,ansampregex=None,ansampregexgrp=None):
         biospec = {}
@@ -198,7 +258,7 @@ class PDC(object):
     { biospecimenPerStudy(study_id: "%(study_id)s", acceptDUA: true) {
     aliquot_id sample_id case_id aliquot_submitter_id
     sample_submitter_id case_submitter_id aliquot_status case_status
-    sample_status project_name sample_type disease_type primary_site pool taxon
+    sample_status project_name sample_type disease_type primary_site pool taxon aliquot_is_ref
     } }
     '''
     def _biospecimenPerStudy(self,study_id):
@@ -280,9 +340,9 @@ class Study(object):
         pool = defaultdict(int)
         for f in sorted(pdc.study_rawfiles(self._study_id,fnmatch=rawfnmatch,ansampregex=ansampregex,ansampregexgrp=ansampregexgrp),key=PDC.rawfilesortkey):
             for a in f['aliquots']:
-                if a.get('taxon') and a.get('pool') != 'Yes':
+                if a.get('taxon') and a.get('aliquot_is_ref') != 'Yes':
                     taxon.add(a.get('taxon'))
-                if a.get('pool') == 'Yes':
+                if a.get('aliquot_is_ref') == 'Yes':
                     aid = a.get('aliquot_id')
                     for k in f:
                         if f[k] and (k.startswith('itraq_') or k.startswith('tmt_')):
@@ -333,12 +393,21 @@ class Study(object):
             for ni in sorted(num,key=labelsort):
                 ratios.append((ni,di))
 
+        ansamp2labelbatch = {}
+        if labelbatch and os.path.exists(labelbatch):
+            for l in open(labelbatch,'rt'):
+                sl = l.split()
+                ansamp2labelbatch[sl[0]] = sl[1]
+        else:
+            for ansamp in ansamps:
+                ansamp2labelbatch[ansamp] = labelbatch
+
         batchnames = set()
         for ansamp in ansamps:
             self._exprdes[ansamp] = {}
             # How do we determine the label reagent?
             if labelbatch:
-                self._exprdes[ansamp]['labelreagent'] = labelbatch
+                self._exprdes[ansamp]['labelreagent'] = ansamp2labelbatch[ansamp]
                 self._has_label_reagents = True
                 batchnames.add(labelbatch)
             if len(ratios) > 0:
@@ -425,14 +494,14 @@ if __name__ == "__main__":
 
     import sys
 
-    pdc = PDC()
+    pdc = eval(sys.argv[1])()
 
     try:
-        st = pdc.find_study(sys.argv[1])
+        st = pdc.find_study(sys.argv[2])
         print(st.name())
         print("RAW spectra files")
         for f in st.rawfiles():
-            print("",f['file_name'],f['signedUrl'])
+            print("",f['file_name'],)
             # print json.dumps(f,indent=2)
         # print "Text files"
         # for f in st.files():
