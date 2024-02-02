@@ -93,5 +93,6 @@ for wfname in wfname2id:
     else:
         print("Workflow %s is new, writing workflow file"%(wfname,), file=sys.stderr)
     wh = open(wffilepath,'w')
-    wh.write(wfstr)
+    wh.write(wfstr.rstrip())
+    wh.write('\n')
     wh.close()
