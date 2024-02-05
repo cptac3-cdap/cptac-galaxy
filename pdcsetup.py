@@ -176,6 +176,7 @@ basename = job_id
 
 wh = open("%s/%s.study.txt"%(workdir,basename),'w')
 wh.write("ID: "+str(study.id())+"\n")
+wh.write("PDC_STUDY_ID: "+str(study.pdc_study_id())+"\n")
 wh.write("SUBMITTER_ID: "+str(study.submitter_id())+"\n")
 wh.write("SUBMITTER_NAME: "+str(study.name())+"\n")
 wh.close()

@@ -93,6 +93,11 @@ class PDC(object):
             for r in res['data']['study']:
                 yield r
 
+    def get_pdc_study_id(self,study_id):
+        for r in self._filesCountPerStudy(study_id=study_id):
+            return r['pdc_study_id']
+        return None
+
     def find_study_id(self,search_term):
         study_id = None
         for i,r in enumerate(self._filesCountPerStudy(study_submitter_id=search_term)):
@@ -177,12 +182,12 @@ class PDC(object):
     def _rawfilesCountPerStudy(self,study_id,**kw):
         for r in self._filesCountPerStudy(study_id=study_id,data_category="Raw Mass Spectra",**kw):
             return r['files_count']
-        return None
+        return 0
 
     def _mdfilesCountPerStudy(self,study_id,**kw):
         for r in self._filesCountPerStudy(study_id=study_id,data_category="Other Metadata",**kw):
             return r['files_count']
-        return None
+        return 0
 
     _getPaginatedFiles_query = '''
        { getPaginatedFiles(offset: %s, limit: %s, %s, acceptDUA: true) { 
@@ -332,6 +337,7 @@ class Study(object):
         self._pdc = pdc
         self._study_id = study_id
         self._study = pdc.get_study(study_id)
+        self._pdc_study_id = pdc.get_pdc_study_id(study_id)
         self._rawfiles = []
         taxon = set()
         instr = set()
@@ -340,7 +346,7 @@ class Study(object):
         pool = defaultdict(int)
         for f in sorted(pdc.study_rawfiles(self._study_id,fnmatch=rawfnmatch,ansampregex=ansampregex,ansampregexgrp=ansampregexgrp),key=PDC.rawfilesortkey):
             for a in f['aliquots']:
-                if a.get('taxon') and a.get('aliquot_is_ref') != 'Yes':
+                if a.get('taxon') and (a.get('aliquot_is_ref') != 'Yes' and a.get('taxon') != 'Not Reported'):
                     taxon.add(a.get('taxon'))
                 if a.get('aliquot_is_ref') == 'Yes':
                     aid = a.get('aliquot_id')
@@ -377,11 +383,11 @@ class Study(object):
             if v == nraw:
                 poollabels.add(k)
         if ratiodenom != None:
-            if set(ratiodenom) <= poollabels and set(ratiodenom) <= labels:
+            if set(ratiodenom) <= labels:
                 denom = set(ratiodenom)
             else:
-                print("Bad ratio denominators chosen, choose from %s."%(", ".join(set(poollabels)&set(labels),)),file=sys.stderr)
-                sys.exit(1)
+                print("Bad ratio denominator chosen, choose from %s."%(", ".join(set(labels),)),file=sys.stderr)
+                sys.exit(1);
         else:
             denom = (poollabels&labels)
             # assert len(denom) == 1, "Can't determine POOL label..."
@@ -433,6 +439,9 @@ class Study(object):
 
     def submitter_id(self):
         return self._study['study_submitter_id']
+
+    def pdc_study_id(self):
+        return self._pdc_study_id;
 
     def experiment_type(self):
         return self._study['experiment_type']
