@@ -28,7 +28,7 @@ Parameter file sets the follwing variables:
   TARGETFDR="<Protein FDR%>" #Optional. Default is 1.0
   INITSPECFDR="<Spec. FDR%>" #Optional. Default is \$TARGETFDR
   PROTOCOL="{CPTAC4-CDAP,...}" #Optional. Default is CPTAC4-CDAP.
-  VERSION="{1,2,...}" #Optional. Default is version 2.
+  VERSION="{1,2,...}" #Optional. Default is version 2.1.
 
 Files <base>.RAW.txt, <base>.sample.txt, \$BATCH.txt are expected in the same directory as <base>.params.
 

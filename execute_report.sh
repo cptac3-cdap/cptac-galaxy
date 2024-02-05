@@ -25,7 +25,7 @@ Parameter file sets the follwing variables:
   TARGETFDR="<Protein FDR%>" #Optional. Default is 1.0%
   INITSPECFDR="<Spec. FDR%>" #Optional. Default is \$TARGETFDR
   PROTOCOL="{CPTAC4-CDAP,...}" #Optional. Default is CPTAC4-CDAP.
-  VERSION="{1,2,...}" #Optional. Default is 2.
+  VERSION="{1,2,...}" #Optional. Default is 2.1.
 
 Files <base>.mzIdentML.txt, <base>.sample.txt, <base>.qcmetrics.tsv, <base>.label.txt  are expected in the same directory as <base>.params.
 
@@ -99,7 +99,7 @@ if [ "$PROTOCOL" = "" ]; then
     PROTOCOL="CPTAC4-CDAP"
 fi
 if [ "$VERSION" = "" ]; then
-    VERSION="2"
+    VERSION="2.1"
 fi
 
 if [ ! -f "$MZID" ]; then

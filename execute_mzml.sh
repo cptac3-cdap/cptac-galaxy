@@ -19,7 +19,7 @@ Parameter file sets the follwing variable:
 
   INST="{Thermo Velos HCD,Thermo Q-Exactive HCD,Thermo Q-Exactive CID}" #Use Q-Exactive for all high-accuracy instruments
   PROTOCOL="{CPTAC4-CDAP,...}" #Optional. Default is CPTAC4-CDAP.
-  VERSION="{1,2,...}" #Optional. Default is version 2.
+  VERSION="{1,2,...}" #Optional. Default is version 2.1.
 
 File <base>.RAW.txt is expected in the same directory as <base>.params.
 
@@ -71,7 +71,7 @@ if [ "$PROTOCOL" = "" ]; then
     PROTOCOL="CPTAC4-CDAP"
 fi
 if [ "$VERSION" = "" ]; then
-    VERSION="2"
+    VERSION="2.1"
 fi
 
 if [ ! -f "$RAW" ]; then
