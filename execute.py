@@ -30,10 +30,10 @@ advanced.add_option("--sleep",dest="sleep",type="int",default=60,
                     help="Time, in seconds, between polling the Galaxy history. Default: 60 seconds.")
 advanced.add_option("--sched_sleep",dest="sched_sleep",type="int",default=15,
                     help="Time, in seconds, between polling the Galaxy server to check whether workflow input jobs have been added to the Galaxy history. Default: 15 seconds.")
-advanced.add_option("--max_complete",dest="max_complete",type="int",default=-1,
-                    help="Max. complete collections before forcing download. Default: No limit.")
-advanced.add_option("--max_download",dest="max_download",type="int",default=-1,
-                    help="Max. output file collections to download, per iteration. Default: No limit.")
+advanced.add_option("--max_complete",dest="max_complete",type="int",default=10,
+                    help="Max. complete collections before forcing download. Default: 10.")
+advanced.add_option("--max_download",dest="max_download",type="int",default=3,
+                    help="Max. output file collections to download, per iteration. Default: 3.")
 advanced.add_option("--max_retries",dest="max_retries",type="int",default=3,
                     help="Max. retries to run the workflow for a datafile. Default: 3.")
 advanced.add_option("--min_disk",dest="min_disk",type="float",default=0.1,
