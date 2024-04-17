@@ -601,7 +601,7 @@ kill -9 `ps -ef | fgrep -w %(jobid)s | fgrep cptac-galaxy/execute | fgrep -v -w 
             gi.histories.delete_dataset(history,id)
             gi.histories.delete_dataset(history,id,purge=True)
 
-    def clear_job(self,jobid):
+    def clear_job(self,jobid,all=False):
         self.ssh_session_start()
         running = self.running_jobs(needsession=False)
         isrunning = (jobid in running)
@@ -611,9 +611,29 @@ kill -9 `ps -ef | fgrep -w %(jobid)s | fgrep cptac-galaxy/execute | fgrep -v -w 
             self.execute("sh %s/stop.sh"%(rdir,))
         gi = GalaxyInstance(url=self.get('url')+'/galaxy/',key=self.get('apikey'))
         gi.verify=False
+        history = None
         for h in gi.histories.get_histories(name=jobid):
+            history = h.get('id')
+            break
+        if not history:
+            retturn
+        if all:
             print("Removing Galaxy history %s."%(jobid,))
-            gi.histories.delete_history(h.get('id'), purge=True)
+            gi.histories.delete_history(history.get('id'), purge=True)
+        else:
+            error = set()
+            for di in gi.histories.show_history(history,contents=True,deleted=False,visible=True,details=True):
+                name,state = list(map(di.get,('name','state')))
+                file_size = gi.histories.show_dataset(history,di.get('id')).get('file_size')
+                base1,extn = DatafileCollection.dssplit(name)
+                if state == 'error' or (state == 'ok' and file_size == 0):
+                    error.add(base1)
+            for base in error:
+                for di in gi.histories.show_matching_datasets(history,re.compile("^%s[-.]"%(re.escape(base),))):
+                    id,name,state,visible,deleted = list(map(di.get,('id','name','state','visible','deleted')))
+                    print("Removing %s from Galaxy history %s."%(name,jobid))
+                    gi.histories.delete_dataset(history,id)
+                    gi.histories.delete_dataset(history,id,purge=True)
         if isrunning:
             print("Restarting job: %s."%(jobid,))
             self.execute("sh %s/execute.sh"%(rdir,))

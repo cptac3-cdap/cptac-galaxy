@@ -60,7 +60,7 @@ Usage: cluster [ <clustername> ] cdap [ -a (Complete|mzML|PSM|Reports) ] <param-
        cluster [ <clustername> ] logfile [ <jobid> [ <logfile> ] ]
        cluster [ <clustername> ] shortlog [ <jobid> [ <logfile> ] ]
        cluster [ <clustername> ] start [ <jobid> | all ]
-       cluster [ <clustername> ] clean [ <jobid> [ <rawfile> ] ]
+       cluster [ <clustername> ] clean [ <jobid> [ <rawfile> | all ] ]
        cluster [ <clustername> ] stop [ <jobid> | all ]
        cluster [ <clustername> ] remove [ <jobid> | all ]
        cluster [ <clustername> ] verify [ <jobid> ]
@@ -179,7 +179,10 @@ elif cmd == "clean":
     # get jobid from first argument if present
     jobid = getjobid(cmd,args[:1])
     if len(args) == 2:
-        cluster.clear_workflow_instance(jobid,args[1])
+        if args[1] == "all":
+            cluster.clear_job(jobid,all=True)
+        else:
+            cluster.clear_workflow_instance(jobid,args[1])
     else:
         cluster.clear_job(jobid)
 
