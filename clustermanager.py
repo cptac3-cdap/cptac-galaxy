@@ -619,7 +619,7 @@ kill -9 `ps -ef | fgrep -w %(jobid)s | fgrep cptac-galaxy/execute | fgrep -v -w 
             retturn
         if all:
             print("Removing Galaxy history %s."%(jobid,))
-            gi.histories.delete_history(history.get('id'), purge=True)
+            gi.histories.delete_history(history, purge=True)
         else:
             error = set()
             for di in gi.histories.show_history(history,contents=True,deleted=False,visible=True,details=True):
