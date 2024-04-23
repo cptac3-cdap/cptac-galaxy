@@ -34,6 +34,8 @@ Parameter file sets the follwing variables:
   TARGETFDR="<Protein FDR%>" #Optional. Default is 1.0
   INITSPECFDR="<Spec. FDR%>" #Optional. Default is \$TARGETFDR
   PROTOCOL="{CPTAC3-CDAP,...}" #Optional. Default is CPTAC3-CDAP
+  VERSION="{1,2,...}" #Optional. Default is version 2.1.
+  EXTRAPSMARGS="..." #Optional. Default is no extra PSM args
 
 Files <base>.RAW.txt, <base>.sample.txt, \$BATCH.txt are expected in the same directory as <base>.params.
 
@@ -166,7 +168,7 @@ fi
 
 if [ $DOPSM = 1 ]; then
   sleep 10
-  cmd $DIR/execute_psm.sh $ARGS $PARAM -- $CLUSTERARG --remote_jobname ${BASE}_PSM --remote_nostatus
+  cmd $DIR/execute_psm.sh $ARGS $PARAM -- $CLUSTERARG $EXTRAPSMARGS --remote_jobname ${BASE}_PSM --remote_nostatus
   while true; do
     sleep 10
     $DIR/cluster $CLUSTER shortlog ${BASE}_PSM > $TMPFILE 2>/dev/null

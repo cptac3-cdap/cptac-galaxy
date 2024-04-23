@@ -29,6 +29,7 @@ Parameter file sets the follwing variables:
   INITSPECFDR="<Spec. FDR%>" #Optional. Default is \$TARGETFDR
   PROTOCOL="{CPTAC4-CDAP,...}" #Optional. Default is CPTAC4-CDAP.
   VERSION="{1,2,...}" #Optional. Default is version 2.1.
+  EXTRAPSMARGS="..." #Optional. Default is no extra PSM args
 
 Files <base>.RAW.txt, <base>.sample.txt, \$BATCH.txt are expected in the same directory as <base>.params.
 
@@ -209,7 +210,7 @@ if [ $DOMZML = 1 ]; then
 elif [ $DOPSM = 1 ]; then
 
   rotate psm.log
-  cmd $DIR/execute_psm.sh $ARGS $PARAM -- $CLUSTERARG --history "${BASE}" --outdir $RESULTS >psm.log 2>&1 &
+  cmd $DIR/execute_psm.sh $ARGS $PARAM -- $CLUSTERARG $EXTRAPSMARGS --history "${BASE}" --outdir $RESULTS >psm.log 2>&1 &
   echo $! > psm.pid
   sleep 5
   echo "*** PSM Analysis ***" | adddate
