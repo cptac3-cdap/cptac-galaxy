@@ -227,7 +227,10 @@ def download(history,base):
                     jobmetrics[job.get('id')]['start'] = float(metric['raw_value'])
                 if metric['name'] == 'end_epoch':
                     jobmetrics[job.get('id')]['end'] = float(metric['raw_value'])
-            create_time = datetime.datetime.strptime(di['create_time'],"%Y-%m-%dT%H:%M:%S.%f")
+            try:
+                create_time = datetime.datetime.strptime(di['create_time'],"%Y-%m-%dT%H:%M:%S.%f")
+            except ValueError:
+                create_time = datetime.datetime.strptime(di['create_time'],"%Y-%m-%dT%H:%M:%S")
             create_seconds = (create_time - datetime.datetime.utcfromtimestamp(0)).total_seconds()
             jobmetrics[job.get('id')]['created'] = create_seconds
             if 'start' in jobmetrics[job.get('id')]:
@@ -356,8 +359,11 @@ def getstatus(history,histname,url,items):
 def getcmstatus(cmi):
     status = dict()
     st = cmi.get_status()
-    du = st['disk_usage']
-    status.update(list(zip(('disk_used','disk_total','disk_percent'),list(map(du.get,('used','total','used_percent'))))))
+    if 'disk_usage' in st:
+        du = st['disk_usage']
+        status.update(list(zip(('disk_used','disk_total','disk_percent'),list(map(du.get,('used','total','used_percent'))))))
+    else:
+        status.update(dict(disk_used='0G',disk_total='0G',disk_percent='0%'))
     status['nodes'] = dict()
     for nd in cmi.get_nodes():
         name = nd.get('alias','master')
