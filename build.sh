@@ -10,4 +10,4 @@ TGZ="cptac-galaxy-`cat VERSION`.linux-`uname -m`.tgz"
 rm -f cptac-galaxy-*.linux-`uname -m`.tgz
 tar --exclude "./seqdb/.git" --exclude "./workflows/.git" -cz -C build/exe.linux-`uname -m`-3.6 -f "$TGZ" .
 rm -rf cptacdcc
-ln -s cptacdcc.python36/cptacdcc cptacdcc
+ln -s cptacdcc.python/cptacdcc cptacdcc
