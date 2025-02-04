@@ -279,6 +279,8 @@ class DatafileCollection(object):
                 if credfile:
                     wh = open(credfile,'w')
                     print("""
+[Aspera]
+Docker = True
 [Portal]
 User = %s
 Password = %s
@@ -288,9 +290,11 @@ Password = %s
                 cksumdatafile = os.path.join(tmpdir,cksumdata.rsplit('/',1)[1])
                 maxattempts = 5
                 attempt = 0
+                env = copy.copy(os.environ)
+                env['NONINTERACTIVE'] = "1"
                 while attempt < maxattempts:
                     attempt += 1
-                    proc = Popen(cmd,cwd=tmpdir,shell=True)
+                    proc = Popen(cmd,cwd=tmpdir,shell=True,env=env)
                     proc.wait()
                     if proc.returncode == 0 and os.path.exists(cksumdatafile):
                         break

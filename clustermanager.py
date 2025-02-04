@@ -148,7 +148,7 @@ class Cluster(object):
             f,fn = tempfile.mkstemp()
             os.close(f)
             fh = open(fn,'w')
-            print("[Portal]\nUser = %s\nPassword = %s\n"%(self.get('cptac_dcc_user'),self.get('cptac_dcc_password')), file=fh)
+            print("[Aspera]\nDocker = Sudo\n[Portal]\nUser = %s\nPassword = %s\n"%(self.get('cptac_dcc_user'),self.get('cptac_dcc_password')), file=fh)
             fh.close()
             self.copy(fn,".cptacdcc.ini")
             os.unlink(fn)
