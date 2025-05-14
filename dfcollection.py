@@ -1,6 +1,6 @@
 #!bin/python
 
-import sys, os, os.path, urllib.request, urllib.parse, urllib.error, tempfile, shutil, time, re
+import sys, os, os.path, urllib.request, urllib.parse, urllib.error, tempfile, shutil, time, re, copy
 from collections import defaultdict
 from subprocess import Popen
 
