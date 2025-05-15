@@ -24,7 +24,6 @@ includes = [
     'workflows',
     'data',
     'docs',
-    'cptacdcc',
     'update.sh',
     'organize0.sh',
     'organize1.sh',

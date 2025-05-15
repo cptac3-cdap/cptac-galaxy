@@ -27,9 +27,9 @@ TXT="template* Identity*"
 CKSUM=""
 INI=".defaults.ini"
 SH="organize0.sh organize1.sh organize1all.sh update.sh dfcoll.sh build.sh build.py execute_cdap.sh execute_psm.sh execute_report.sh withdrawn.sh execute_cdap_on_cluster.sh execute_mzml.sh forportal.sh"
+( cd cptacdcc.python/cptacdcc; ./update.sh )
 rm -f cptacdcc
 ln -s cptacdcc.python/cptacdcc cptacdcc
-( cd cptacdcc;  ./update.sh )
 tar --exclude "seqdb/.git" --exclude "workflows/.git" -czhf "$DIR/$TGZ" $PY $TXT $CKSUM $SH $INI VERSION workflows seqdb data etc docs cptacdcc
 # cp setup.python36.sh $DIR/cptac-galaxy-setup.python36.sh
 # cp setup.linux-x86_64.sh $DIR/cptac-galaxy-setup.linux-x86_64.sh
