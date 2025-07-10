@@ -168,8 +168,8 @@ class Cluster(object):
         if os.path.exists(os.path.join(scriptdir,".rclone.conf")):
             self.copy(os.path.join(scriptdir,".rclone.conf"),"cptac-galaxy/.rclone.conf")
             self.execute("chmod a+r cptac-galaxy/.rclone.conf")
-        self.execute("rm -rf cptac-galaxy/cptacdcc")
-        self.execute("wget --no-check-certificate -q -O - https://edwardslab.bmcb.georgetown.edu/software/downloads/CPTAC-DCC/cptacdcc.linux-x86_64.tgz | tar xzf - -C cptac-galaxy")
+        # self.execute("rm -rf cptac-galaxy/cptacdcc")
+        # self.execute(" ( cd cptac-galaxy/cptacdcc; sh ./update.sh )")
         self.dcccredentials()
         self.execute("mkdir -p " + self.datadir)
         self.copy(self.get('aws_keypath'),".ssh/id_rsa")
